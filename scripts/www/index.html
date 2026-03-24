@@ -1,11 +1,2778 @@
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>PakePlus</title>
-    </head>
-    <body>
-        PakePlus
-    </body>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Language Learning Hub</title>
+<style>
+/* ===== CSS Variables & Reset ===== */
+:root {
+  --primary: #6C5CE7;
+  --primary-light: #A29BFE;
+  --primary-dark: #5A4BD1;
+  --secondary: #00CEC9;
+  --secondary-light: #81ECEC;
+  --accent: #FD79A8;
+  --accent-light: #FDCB6E;
+  --success: #00B894;
+  --warning: #FDCB6E;
+  --danger: #E17055;
+  --bg-main: #F8F9FE;
+  --bg-card: #FFFFFF;
+  --bg-sidebar: #2D3436;
+  --bg-sidebar-hover: #3D4446;
+  --text-primary: #2D3436;
+  --text-secondary: #636E72;
+  --text-light: #B2BEC3;
+  --text-white: #FFFFFF;
+  --border: #DFE6E9;
+  --shadow: 0 2px 10px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-lg: 16px;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg-main);
+  color: var(--text-primary);
+  overflow: hidden;
+  height: 100vh;
+}
+
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--text-light); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+
+/* ===== Layout ===== */
+.app-container { display: flex; flex-direction: column; height: 100vh; }
+
+.top-bar {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: var(--text-white);
+  padding: 0 24px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 20px rgba(108, 92, 231, 0.3);
+  z-index: 100;
+  flex-shrink: 0;
+}
+
+.top-bar .logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.top-bar .logo svg { width: 32px; height: 32px; }
+
+.search-box {
+  position: relative;
+  width: 400px;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 10px 16px 10px 42px;
+  border: 2px solid rgba(255,255,255,0.2);
+  border-radius: 25px;
+  background: rgba(255,255,255,0.15);
+  color: var(--text-white);
+  font-size: 14px;
+  outline: none;
+  transition: var(--transition);
+  backdrop-filter: blur(10px);
+}
+
+.search-box input::placeholder { color: rgba(255,255,255,0.6); }
+.search-box input:focus { background: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.4); }
+
+.search-box .search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255,255,255,0.6);
+}
+
+.top-actions { display: flex; gap: 8px; align-items: center; }
+
+.main-area { display: flex; flex: 1; overflow: hidden; }
+
+/* ===== Sidebar ===== */
+.sidebar {
+  width: 280px;
+  background: var(--bg-sidebar);
+  color: var(--text-white);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  border-right: 1px solid rgba(255,255,255,0.05);
+}
+
+.notebook-tabs {
+  display: flex;
+  padding: 12px 12px 0;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.notebook-tab {
+  flex: 1;
+  padding: 10px 6px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  cursor: pointer;
+  transition: var(--transition);
+  background: rgba(255,255,255,0.05);
+  border: none;
+  color: var(--text-light);
+  letter-spacing: 0.3px;
+}
+
+.notebook-tab:hover { background: rgba(255,255,255,0.1); color: var(--text-white); }
+.notebook-tab.active { background: rgba(108, 92, 231, 0.4); color: var(--text-white); }
+
+.notebook-tab.all-tab.active { background: rgba(108, 92, 231, 0.4); }
+.notebook-tab.vocab-tab.active { background: rgba(0, 206, 201, 0.4); }
+.notebook-tab.grammar-tab.active { background: rgba(253, 121, 168, 0.4); }
+.notebook-tab.material-tab.active { background: rgba(253, 203, 110, 0.5); }
+
+.sidebar-header {
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  flex-shrink: 0;
+}
+
+.sidebar-header h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-light); }
+
+.sidebar-actions { display: flex; gap: 4px; }
+
+.tree-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+/* ===== Tree Nodes ===== */
+.tree-node { user-select: none; }
+
+.tree-node-header {
+  display: flex;
+  align-items: center;
+  padding: 6px 12px 6px 8px;
+  cursor: pointer;
+  transition: var(--transition);
+  gap: 4px;
+  min-height: 34px;
+}
+
+.tree-node-header:hover { background: var(--bg-sidebar-hover); }
+.tree-node-header.selected { background: rgba(108, 92, 231, 0.3); border-right: 3px solid var(--primary-light); }
+
+.tree-toggle {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+  color: var(--text-light);
+  font-size: 10px;
+}
+
+.tree-toggle.expanded { transform: rotate(90deg); }
+.tree-toggle.hidden { visibility: hidden; }
+
+.tree-checkbox {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.tree-icon { flex-shrink: 0; font-size: 14px; margin-right: 4px; }
+.tree-label { font-size: 13px; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tree-count { font-size: 11px; color: var(--text-light); background: rgba(255,255,255,0.1); padding: 1px 6px; border-radius: 10px; flex-shrink: 0; }
+
+.tree-children { padding-left: 16px; }
+.tree-children.collapsed { display: none; }
+
+.tree-node-actions {
+  display: none;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.tree-node-header:hover .tree-node-actions { display: flex; }
+.tree-node-header:hover .tree-count { display: none; }
+
+/* ===== Content Area ===== */
+.content-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-main);
+}
+
+.content-toolbar {
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+}
+
+.content-toolbar .breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  flex-shrink: 1;
+  overflow: hidden;
+}
+
+.breadcrumb span { white-space: nowrap; }
+.breadcrumb .sep { color: var(--text-light); }
+.breadcrumb .current { color: var(--text-primary); font-weight: 600; }
+
+.toolbar-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+.content-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+/* ===== Buttons ===== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+  font-family: var(--font);
+}
+
+.btn-primary { background: var(--primary); color: white; }
+.btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(108,92,231,0.4); }
+
+.btn-secondary { background: var(--secondary); color: white; }
+.btn-secondary:hover { background: #00B5B0; transform: translateY(-1px); }
+
+.btn-accent { background: var(--accent); color: white; }
+.btn-accent:hover { opacity: 0.9; transform: translateY(-1px); }
+
+.btn-outline { background: transparent; border: 2px solid var(--border); color: var(--text-secondary); }
+.btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+
+.btn-ghost { background: transparent; color: var(--text-secondary); padding: 6px 8px; }
+.btn-ghost:hover { background: rgba(0,0,0,0.05); color: var(--text-primary); }
+
+.btn-danger { background: var(--danger); color: white; }
+.btn-danger:hover { opacity: 0.9; }
+
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+
+.icon-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+  background: transparent;
+  color: var(--text-light);
+  font-size: 14px;
+}
+
+.icon-btn:hover { background: rgba(255,255,255,0.1); color: var(--text-white); }
+.icon-btn.light:hover { background: rgba(0,0,0,0.05); color: var(--text-primary); }
+
+/* ===== Cards ===== */
+.entry-card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+  border-left: 4px solid transparent;
+  position: relative;
+}
+
+.entry-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+.entry-card.vocab-card { border-left-color: var(--secondary); }
+.entry-card.grammar-card { border-left-color: var(--accent); }
+.entry-card.material-card { border-left-color: var(--accent-light); }
+
+.entry-card .card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.entry-card .card-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.entry-card .card-badge {
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.badge-vocab { background: rgba(0,206,201,0.15); color: var(--secondary); }
+.badge-grammar { background: rgba(253,121,168,0.15); color: var(--accent); }
+.badge-material { background: rgba(253,203,110,0.2); color: #E17055; }
+
+.entry-card .card-definition { color: var(--text-secondary); font-size: 14px; margin-bottom: 8px; line-height: 1.6; }
+
+.entry-card .card-examples { margin-bottom: 8px; }
+
+.card-example {
+  font-size: 13px;
+  color: var(--text-secondary);
+  padding: 6px 12px;
+  background: var(--bg-main);
+  border-radius: var(--radius-sm);
+  margin-bottom: 4px;
+  border-left: 3px solid var(--primary-light);
+  line-height: 1.5;
+}
+
+.entry-card .card-note {
+  font-size: 12px;
+  color: var(--text-light);
+  font-style: italic;
+  margin-bottom: 8px;
+}
+
+.entry-card .card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.card-tag {
+  font-size: 11px;
+  padding: 2px 8px;
+  background: rgba(108,92,231,0.1);
+  color: var(--primary);
+  border-radius: 12px;
+}
+
+.card-actions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: var(--transition);
+}
+
+.entry-card:hover .card-actions { opacity: 1; }
+
+.card-checkbox {
+  position: absolute;
+  top: 20px;
+  left: -2px;
+  transform: translateX(-100%);
+  opacity: 0;
+  transition: var(--transition);
+}
+
+.show-checkboxes .card-checkbox { opacity: 1; transform: translateX(0); position: relative; top: auto; left: auto; margin-right: 8px; }
+.show-checkboxes .entry-card { padding-left: 16px; }
+
+/* ===== Modal ===== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: var(--transition);
+  backdrop-filter: blur(4px);
+}
+
+.modal-overlay.active { opacity: 1; visibility: visible; }
+
+.modal {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  width: 90%;
+  max-width: 600px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  transform: scale(0.9) translateY(20px);
+  transition: var(--transition);
+}
+
+.modal-overlay.active .modal { transform: scale(1) translateY(0); }
+
+.modal.wide { max-width: 900px; }
+.modal.extra-wide { max-width: 1100px; }
+
+.modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.modal-header h2 { font-size: 18px; font-weight: 700; }
+
+.modal-body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* ===== Form ===== */
+.form-group { margin-bottom: 16px; }
+.form-label { display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
+.form-required::after { content: ' *'; color: var(--danger); }
+
+.form-input, .form-textarea, .form-select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-family: var(--font);
+  outline: none;
+  transition: var(--transition);
+  background: var(--bg-main);
+}
+
+.form-input:focus, .form-textarea:focus, .form-select:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(108,92,231,0.1); }
+
+.form-textarea { resize: vertical; min-height: 80px; }
+
+/* Example inputs */
+.example-list { display: flex; flex-direction: column; gap: 8px; }
+.example-item { display: flex; gap: 8px; align-items: center; }
+.example-item input { flex: 1; }
+
+/* Category selector */
+.category-selector {
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 8px;
+  background: var(--bg-main);
+}
+
+.category-selector .tree-node-header { padding: 4px 8px; border-radius: 4px; min-height: 28px; color: var(--text-primary); }
+.category-selector .tree-node-header:hover { background: rgba(108,92,231,0.1); }
+.category-selector .tree-toggle { color: var(--text-secondary); }
+
+/* ===== Search Results ===== */
+.search-results-container { padding: 0; }
+
+.search-tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 2px solid var(--border); }
+
+.search-tab {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: var(--transition);
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  font-family: var(--font);
+}
+
+.search-tab:hover { color: var(--primary); }
+.search-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+.search-tab .tab-count {
+  font-size: 11px;
+  background: var(--bg-main);
+  padding: 1px 8px;
+  border-radius: 10px;
+  margin-left: 6px;
+}
+
+mark {
+  background: rgba(253,203,110,0.5);
+  color: inherit;
+  padding: 1px 2px;
+  border-radius: 2px;
+}
+
+/* ===== Quiz ===== */
+.quiz-setup {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.quiz-option-group {
+  background: var(--bg-main);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.quiz-option-group h4 {
+  font-size: 14px;
+  margin-bottom: 12px;
+  color: var(--text-primary);
+}
+
+.radio-group, .checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.radio-item, .checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.quiz-practice {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.quiz-progress {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.quiz-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  margin-bottom: 30px;
+  overflow: hidden;
+}
+
+.quiz-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+.quiz-question {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+
+.quiz-hint {
+  font-size: 14px;
+  color: var(--text-light);
+  margin-bottom: 30px;
+}
+
+.quiz-input {
+  width: 100%;
+  max-width: 400px;
+  padding: 14px 20px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 18px;
+  text-align: center;
+  outline: none;
+  transition: var(--transition);
+  font-family: var(--font);
+}
+
+.quiz-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(108,92,231,0.1); }
+
+.quiz-feedback {
+  margin-top: 20px;
+  padding: 16px;
+  border-radius: var(--radius);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.quiz-feedback.correct { background: rgba(0,184,148,0.1); color: var(--success); }
+.quiz-feedback.incorrect { background: rgba(225,112,85,0.1); color: var(--danger); }
+
+.quiz-score {
+  text-align: center;
+  padding: 40px;
+}
+
+.quiz-score .score-circle {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+  color: white;
+  font-size: 36px;
+  font-weight: 800;
+  box-shadow: 0 8px 30px rgba(108,92,231,0.3);
+}
+
+/* ===== Exam Paper ===== */
+.exam-paper {
+  background: white;
+  width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto;
+  padding: 20mm;
+  box-shadow: var(--shadow-lg);
+  font-family: 'Times New Roman', serif;
+}
+
+.exam-paper h1 {
+  text-align: center;
+  font-size: 22px;
+  margin-bottom: 8px;
+  border-bottom: 2px solid #333;
+  padding-bottom: 8px;
+}
+
+.exam-paper .exam-info { text-align: center; font-size: 13px; color: #666; margin-bottom: 20px; }
+
+.exam-paper .exam-section { margin-bottom: 20px; }
+.exam-paper .exam-section h3 { font-size: 15px; margin-bottom: 10px; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
+
+.exam-question {
+  margin-bottom: 14px;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.exam-question .q-num { font-weight: bold; margin-right: 8px; }
+.exam-blank { display: inline-block; width: 200px; border-bottom: 1px solid #333; margin: 0 4px; }
+
+/* ===== Toast ===== */
+.toast-container {
+  position: fixed;
+  top: 80px;
+  right: 24px;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.toast {
+  background: var(--bg-card);
+  padding: 14px 20px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  animation: slideIn 0.3s ease;
+  max-width: 350px;
+}
+
+.toast.success { border-left: 4px solid var(--success); }
+.toast.error { border-left: 4px solid var(--danger); }
+.toast.info { border-left: 4px solid var(--primary); }
+
+@keyframes slideIn {
+  from { transform: translateX(100px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* ===== Empty State ===== */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-light);
+}
+
+.empty-state .empty-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.empty-state h3 { font-size: 18px; margin-bottom: 8px; color: var(--text-secondary); }
+.empty-state p { font-size: 14px; margin-bottom: 20px; }
+
+/* ===== JSON Template ===== */
+.json-template {
+  background: #2D3436;
+  color: #DFE6E9;
+  padding: 16px;
+  border-radius: var(--radius-sm);
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  overflow-x: auto;
+  white-space: pre;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.json-template .key { color: #81ECEC; }
+.json-template .string { color: #FFEAA7; }
+.json-template .number { color: #FD79A8; }
+
+/* ===== Context Menu ===== */
+.context-menu {
+  position: fixed;
+  background: var(--bg-card);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+  padding: 6px 0;
+  z-index: 1500;
+  min-width: 160px;
+  display: none;
+}
+
+.context-menu.show { display: block; }
+
+.context-menu-item {
+  padding: 8px 16px;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: var(--transition);
+}
+
+.context-menu-item:hover { background: rgba(108,92,231,0.1); color: var(--primary); }
+.context-menu-item.danger { color: var(--danger); }
+.context-menu-item.danger:hover { background: rgba(225,112,85,0.1); }
+.context-menu-divider { height: 1px; background: var(--border); margin: 4px 0; }
+
+/* ===== Confirm Dialog ===== */
+.confirm-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5); display: flex; align-items: center;
+  justify-content: center; z-index: 2000; opacity: 0; visibility: hidden;
+  transition: var(--transition);
+}
+.confirm-overlay.active { opacity: 1; visibility: visible; }
+
+.confirm-dialog {
+  background: var(--bg-card); border-radius: var(--radius-lg);
+  padding: 28px; max-width: 400px; width: 90%;
+  box-shadow: var(--shadow-lg); text-align: center;
+}
+
+.confirm-dialog h3 { margin-bottom: 12px; font-size: 18px; }
+.confirm-dialog p { color: var(--text-secondary); margin-bottom: 24px; font-size: 14px; line-height: 1.6; }
+.confirm-dialog .confirm-actions { display: flex; gap: 8px; justify-content: center; }
+
+/* ===== Print Styles ===== */
+@media print {
+  .top-bar, .sidebar, .content-toolbar, .modal-footer, .toast-container { display: none !important; }
+  .content-area { margin: 0; }
+  .content-body { padding: 0; }
+  .exam-paper { box-shadow: none; margin: 0; padding: 15mm; }
+  body { overflow: visible; }
+}
+
+/* ===== Animations ===== */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+
+.fade-in { animation: fadeIn 0.3s ease; }
+
+/* ===== Drag hover ===== */
+.tree-node-header.drag-over {
+  background: rgba(108, 92, 231, 0.2) !important;
+  outline: 2px dashed var(--primary-light);
+}
+
+/* ===== Category path display ===== */
+.category-path {
+  font-size: 12px;
+  color: var(--text-light);
+  margin-top: 2px;
+}
+
+/* ===== Stat bar ===== */
+.stat-bar {
+  display: flex;
+  gap: 20px;
+  padding: 12px 24px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.stat-item .stat-num {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--text-primary);
+}
+
+.stat-item .stat-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+</style>
+</head>
+<body>
+
+<div class="app-container" id="app">
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <div class="logo">
+      <svg viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="rgba(255,255,255,0.2)"/><text x="16" y="22" text-anchor="middle" fill="white" font-size="18" font-weight="bold">📖</text></svg>
+      <span>Language Learning Hub</span>
+    </div>
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="globalSearch" placeholder="搜索单词、语法、素材..." autocomplete="off">
+    </div>
+    <div class="top-actions">
+      <button class="btn btn-sm btn-outline" style="color:white;border-color:rgba(255,255,255,0.3)" onclick="showImportModal()" title="导入数据">📥 导入</button>
+      <button class="btn btn-sm btn-outline" style="color:white;border-color:rgba(255,255,255,0.3)" onclick="showExportModal()" title="导出数据">📤 导出</button>
+    </div>
+  </div>
+
+  <div class="main-area">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="notebook-tabs">
+        <div class="notebook-tab all-tab active" onclick="switchNotebook('all')">📚 全部</div>
+        <div class="notebook-tab vocab-tab" onclick="switchNotebook('vocabulary')">📝 生词</div>
+        <div class="notebook-tab grammar-tab" onclick="switchNotebook('grammar')">📐 语法</div>
+        <div class="notebook-tab material-tab" onclick="switchNotebook('material')">✨ 素材</div>
+      </div>
+      <div class="sidebar-header">
+        <h3>分类管理</h3>
+        <div class="sidebar-actions">
+          <button class="icon-btn" onclick="createCategory(null)" title="新建根分类">➕</button>
+        </div>
+      </div>
+      <div class="tree-container" id="categoryTree"></div>
+    </div>
+
+    <!-- Content -->
+    <div class="content-area">
+      <div class="content-toolbar">
+        <div class="breadcrumb" id="breadcrumb">
+          <span class="current">全部内容</span>
+        </div>
+        <div class="toolbar-actions">
+          <button class="btn btn-primary" onclick="showAddEntryModal()">➕ 新增</button>
+          <button class="btn btn-secondary" onclick="showQuizSetup()" id="quizBtn">📝 测验</button>
+          <button class="btn btn-outline" onclick="toggleSelectMode()" id="selectModeBtn">☑️ 选择</button>
+        </div>
+      </div>
+      <div class="stat-bar" id="statBar">
+        <div class="stat-item"><div class="stat-dot" style="background:var(--secondary)"></div><span class="stat-num" id="statVocab">0</span>生词</div>
+        <div class="stat-item"><div class="stat-dot" style="background:var(--accent)"></div><span class="stat-num" id="statGrammar">0</span>语法</div>
+        <div class="stat-item"><div class="stat-dot" style="background:var(--accent-light)"></div><span class="stat-num" id="statMaterial">0</span>素材</div>
+      </div>
+      <div class="content-body" id="contentBody">
+        <div class="empty-state">
+          <div class="empty-icon">📚</div>
+          <h3>开始你的学习之旅</h3>
+          <p>点击「新增」按钮添加你的第一个学习条目</p>
+          <button class="btn btn-primary" onclick="showAddEntryModal()">➕ 新增条目</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Context Menu -->
+<div class="context-menu" id="contextMenu">
+  <div class="context-menu-item" onclick="contextAction('addSub')">📁 添加子分类</div>
+  <div class="context-menu-item" onclick="contextAction('rename')">✏️ 重命名</div>
+  <div class="context-menu-item" onclick="contextAction('move')">📦 移动</div>
+  <div class="context-menu-divider"></div>
+  <div class="context-menu-item danger" onclick="contextAction('delete')">🗑️ 删除分类</div>
+</div>
+
+<!-- Confirm Dialog -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-dialog">
+    <h3 id="confirmTitle">确认操作</h3>
+    <p id="confirmMessage">确定要执行此操作吗？</p>
+    <div class="confirm-actions">
+      <button class="btn btn-outline" onclick="closeConfirm()">取消</button>
+      <button class="btn btn-danger" id="confirmBtn" onclick="confirmAction()">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Container -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modalContainer">
+    <div class="modal-header">
+      <h2 id="modalTitle">弹窗</h2>
+      <button class="icon-btn light" onclick="closeModal()">✖️</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<script>
+// ===================================================================
+// DATA LAYER - IndexedDB
+// ===================================================================
+const DB_NAME = 'LanguageLearningHub';
+const DB_VERSION = 1;
+let db = null;
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => { db = request.result; resolve(db); };
+    request.onupgradeneeded = (e) => {
+      const database = e.target.result;
+      if (!database.objectStoreNames.contains('categories')) {
+        const catStore = database.createObjectStore('categories', { keyPath: 'id' });
+        catStore.createIndex('parentId', 'parentId', { unique: false });
+      }
+      if (!database.objectStoreNames.contains('entries')) {
+        const entryStore = database.createObjectStore('entries', { keyPath: 'id' });
+        entryStore.createIndex('type', 'type', { unique: false });
+      }
+      if (!database.objectStoreNames.contains('entry_categories')) {
+        const ecStore = database.createObjectStore('entry_categories', { keyPath: 'id' });
+        ecStore.createIndex('entryId', 'entryId', { unique: false });
+        ecStore.createIndex('categoryId', 'categoryId', { unique: false });
+      }
+    };
+  });
+}
+
+function generateId() {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+}
+
+function dbTransaction(storeNames, mode) {
+  const tx = db.transaction(storeNames, mode);
+  return tx;
+}
+
+function dbGetAll(storeName) {
+  return new Promise((resolve, reject) => {
+    const tx = dbTransaction([storeName], 'readonly');
+    const store = tx.objectStore(storeName);
+    const req = store.getAll();
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function dbGet(storeName, id) {
+  return new Promise((resolve, reject) => {
+    const tx = dbTransaction([storeName], 'readonly');
+    const store = tx.objectStore(storeName);
+    const req = store.get(id);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function dbPut(storeName, data) {
+  return new Promise((resolve, reject) => {
+    const tx = dbTransaction([storeName], 'readwrite');
+    const store = tx.objectStore(storeName);
+    const req = store.put(data);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function dbDelete(storeName, id) {
+  return new Promise((resolve, reject) => {
+    const tx = dbTransaction([storeName], 'readwrite');
+    const store = tx.objectStore(storeName);
+    const req = store.delete(id);
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function dbGetByIndex(storeName, indexName, value) {
+  return new Promise((resolve, reject) => {
+    const tx = dbTransaction([storeName], 'readonly');
+    const store = tx.objectStore(storeName);
+    const index = store.index(indexName);
+    const req = index.getAll(value);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+// ===================================================================
+// APPLICATION STATE
+// ===================================================================
+let appState = {
+  currentNotebook: 'all', // 'all', 'vocabulary', 'grammar', 'material'
+  selectedCategoryId: null,
+  selectMode: false,
+  selectedEntries: new Set(),
+  contextMenuCategoryId: null,
+  confirmCallback: null,
+  categories: [],
+  entries: [],
+  entryCategories: [],
+};
+
+// ===================================================================
+// CATEGORY OPERATIONS
+// ===================================================================
+async function loadAllData() {
+  appState.categories = await dbGetAll('categories');
+  appState.entries = await dbGetAll('entries');
+  appState.entryCategories = await dbGetAll('entry_categories');
+}
+
+async function saveCategory(cat) {
+  await dbPut('categories', cat);
+  await loadAllData();
+}
+
+async function deleteCategory(catId) {
+  // delete category and all sub-categories recursively
+  const children = appState.categories.filter(c => c.parentId === catId);
+  for (const child of children) {
+    await deleteCategory(child.id);
+  }
+  // remove entry_categories references
+  const refs = appState.entryCategories.filter(ec => ec.categoryId === catId);
+  for (const ref of refs) {
+    await dbDelete('entry_categories', ref.id);
+  }
+  await dbDelete('categories', catId);
+}
+
+async function saveEntry(entry) {
+  await dbPut('entries', entry);
+}
+
+async function deleteEntry(entryId) {
+  const refs = appState.entryCategories.filter(ec => ec.entryId === entryId);
+  for (const ref of refs) {
+    await dbDelete('entry_categories', ref.id);
+  }
+  await dbDelete('entries', entryId);
+}
+
+async function setEntryCategories(entryId, categoryIds) {
+  // remove existing
+  const existing = appState.entryCategories.filter(ec => ec.entryId === entryId);
+  for (const ec of existing) {
+    await dbDelete('entry_categories', ec.id);
+  }
+  // add new
+  for (const catId of categoryIds) {
+    await dbPut('entry_categories', { id: generateId(), entryId, categoryId: catId });
+  }
+}
+
+function getCategoryPath(catId) {
+  const parts = [];
+  let current = appState.categories.find(c => c.id === catId);
+  while (current) {
+    parts.unshift(current.name);
+    current = appState.categories.find(c => c.id === current.parentId);
+  }
+  return parts.join(' / ');
+}
+
+function getEntryCategoryIds(entryId) {
+  return appState.entryCategories.filter(ec => ec.entryId === entryId).map(ec => ec.categoryId);
+}
+
+function getCategoryEntries(catId, includeChildren = true) {
+  const catIds = [catId];
+  if (includeChildren) {
+    const addChildren = (parentId) => {
+      const children = appState.categories.filter(c => c.parentId === parentId);
+      for (const child of children) {
+        catIds.push(child.id);
+        addChildren(child.id);
+      }
+    };
+    addChildren(catId);
+  }
+  const entryIds = new Set(
+    appState.entryCategories.filter(ec => catIds.includes(ec.categoryId)).map(ec => ec.entryId)
+  );
+  return appState.entries.filter(e => entryIds.has(e.id));
+}
+
+function getFilteredEntries() {
+  let entries;
+  if (appState.selectedCategoryId) {
+    entries = getCategoryEntries(appState.selectedCategoryId);
+  } else {
+    entries = [...appState.entries];
+  }
+
+  if (appState.currentNotebook !== 'all') {
+    entries = entries.filter(e => e.type === appState.currentNotebook);
+  }
+
+  return entries;
+}
+
+function getCategoryCount(catId) {
+  return getCategoryEntries(catId).length;
+}
+
+function getRootCategories() {
+  return appState.categories.filter(c => !c.parentId || c.parentId === null);
+}
+
+function getChildCategories(parentId) {
+  return appState.categories.filter(c => c.parentId === parentId);
+}
+
+// Get categories that have entries of a certain type
+function getCategoriesForNotebook(notebook) {
+  if (notebook === 'all') return appState.categories;
+  const entryIds = new Set(appState.entries.filter(e => e.type === notebook).map(e => e.id));
+  const catIds = new Set(appState.entryCategories.filter(ec => entryIds.has(ec.entryId)).map(ec => ec.categoryId));
+  // Include parent categories
+  const allCatIds = new Set(catIds);
+  for (const catId of catIds) {
+    let current = appState.categories.find(c => c.id === catId);
+    while (current && current.parentId) {
+      allCatIds.add(current.parentId);
+      current = appState.categories.find(c => c.id === current.parentId);
+    }
+  }
+  // Actually we should show all categories, user might want to organize them
+  return appState.categories;
+}
+
+// ===================================================================
+// UI RENDERING
+// ===================================================================
+function switchNotebook(notebook) {
+  appState.currentNotebook = notebook;
+  appState.selectedCategoryId = null;
+  document.querySelectorAll('.notebook-tab').forEach(t => t.classList.remove('active'));
+  const tabs = document.querySelectorAll('.notebook-tab');
+  const index = ['all', 'vocabulary', 'grammar', 'material'].indexOf(notebook);
+  if (index >= 0) tabs[index].classList.add('active');
+
+  // Show/hide quiz button
+  document.getElementById('quizBtn').style.display =
+    (notebook === 'vocabulary' || notebook === 'all') ? '' : 'none';
+
+  renderCategoryTree();
+  renderContent();
+  updateBreadcrumb();
+  updateStats();
+}
+
+function renderCategoryTree() {
+  const container = document.getElementById('categoryTree');
+  const roots = getRootCategories();
+
+  if (roots.length === 0) {
+    container.innerHTML = `
+      <div style="padding:20px;text-align:center;color:var(--text-light);font-size:13px;">
+        <p style="margin-bottom:12px;">暂无分类</p>
+        <button class="btn btn-sm btn-primary" onclick="createCategory(null)">➕ 创建分类</button>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = renderTreeNodes(roots, false);
+}
+
+function renderTreeNodes(categories, showCheckboxes) {
+  return categories.map(cat => {
+    const children = getChildCategories(cat.id);
+    const hasChildren = children.length > 0;
+    const count = getCategoryCount(cat.id);
+    const isSelected = appState.selectedCategoryId === cat.id;
+
+    return `
+      <div class="tree-node" data-id="${cat.id}">
+        <div class="tree-node-header ${isSelected ? 'selected' : ''}"
+             onclick="selectCategory('${cat.id}')"
+             oncontextmenu="showContextMenu(event, '${cat.id}')">
+          <span class="tree-toggle ${hasChildren ? '' : 'hidden'} ${cat.expanded ? 'expanded' : ''}"
+                onclick="event.stopPropagation(); toggleTreeNode('${cat.id}')">▶</span>
+          ${showCheckboxes ? `<input type="checkbox" class="tree-checkbox" data-cat-id="${cat.id}" onclick="event.stopPropagation()">` : ''}
+          <span class="tree-icon">${hasChildren ? '📁' : '📄'}</span>
+          <span class="tree-label">${escapeHtml(cat.name)}</span>
+          <span class="tree-count">${count}</span>
+          <div class="tree-node-actions">
+            <button class="icon-btn" onclick="event.stopPropagation(); createCategory('${cat.id}')" title="添加子分类" style="width:24px;height:24px;font-size:12px;">➕</button>
+            <button class="icon-btn" onclick="event.stopPropagation(); showContextMenu(event, '${cat.id}')" title="更多" style="width:24px;height:24px;font-size:12px;">⋮</button>
+          </div>
+        </div>
+        ${hasChildren ? `<div class="tree-children ${cat.expanded ? '' : 'collapsed'}">${renderTreeNodes(children, showCheckboxes)}</div>` : ''}
+      </div>`;
+  }).join('');
+}
+
+async function toggleTreeNode(catId) {
+  const cat = appState.categories.find(c => c.id === catId);
+  if (cat) {
+    cat.expanded = !cat.expanded;
+    await saveCategory(cat);
+    await loadAllData();
+    renderCategoryTree();
+  }
+}
+
+function selectCategory(catId) {
+  if (appState.selectedCategoryId === catId) {
+    appState.selectedCategoryId = null;
+  } else {
+    appState.selectedCategoryId = catId;
+  }
+  renderCategoryTree();
+  renderContent();
+  updateBreadcrumb();
+  updateStats();
+}
+
+function updateBreadcrumb() {
+  const bc = document.getElementById('breadcrumb');
+  const notebookNames = { all: '全部内容', vocabulary: '生词本', grammar: '语法本', material: '素材本' };
+
+  let parts = [`<span>${notebookNames[appState.currentNotebook]}</span>`];
+
+  if (appState.selectedCategoryId) {
+    const path = getCategoryPath(appState.selectedCategoryId);
+    const segments = path.split(' / ');
+    segments.forEach((seg, i) => {
+      parts.push(`<span class="sep">›</span>`);
+      if (i === segments.length - 1) {
+        parts.push(`<span class="current">${escapeHtml(seg)}</span>`);
+      } else {
+        parts.push(`<span>${escapeHtml(seg)}</span>`);
+      }
+    });
+  }
+
+  bc.innerHTML = parts.join('');
+}
+
+function updateStats() {
+  const entries = getFilteredEntries();
+  document.getElementById('statVocab').textContent = entries.filter(e => e.type === 'vocabulary').length;
+  document.getElementById('statGrammar').textContent = entries.filter(e => e.type === 'grammar').length;
+  document.getElementById('statMaterial').textContent = entries.filter(e => e.type === 'material').length;
+}
+
+function renderContent() {
+  const body = document.getElementById('contentBody');
+  const entries = getFilteredEntries();
+
+  if (entries.length === 0) {
+    body.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📝</div>
+        <h3>这里还没有内容</h3>
+        <p>点击「新增」按钮添加你的第一个学习条目，或者导入已有数据。</p>
+        <button class="btn btn-primary" onclick="showAddEntryModal()">➕ 新增条目</button>
+      </div>`;
+    return;
+  }
+
+  const selectClass = appState.selectMode ? 'show-checkboxes' : '';
+  body.innerHTML = `<div class="${selectClass}">${entries.map(e => renderEntryCard(e)).join('')}</div>`;
+
+  if (appState.selectMode) {
+    body.innerHTML += `
+      <div style="position:sticky;bottom:0;background:white;padding:16px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;border-radius:var(--radius) var(--radius) 0 0;box-shadow:0 -2px 10px rgba(0,0,0,0.05);">
+        <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;">
+          <input type="checkbox" onchange="toggleSelectAll(this.checked)"> 全选
+        </label>
+        <div style="display:flex;gap:8px;">
+          <span style="font-size:13px;color:var(--text-secondary);line-height:32px;">已选 <strong id="selectedCount">${appState.selectedEntries.size}</strong> 项</span>
+          <button class="btn btn-sm btn-outline" onclick="exportSelected()">📤 导出选中</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteSelected()">🗑️ 删除选中</button>
+        </div>
+      </div>`;
+  }
+}
+
+function renderEntryCard(entry) {
+  const catIds = getEntryCategoryIds(entry.id);
+  const catNames = catIds.map(id => {
+    const cat = appState.categories.find(c => c.id === id);
+    return cat ? cat.name : '';
+  }).filter(Boolean);
+
+  const typeClass = entry.type === 'vocabulary' ? 'vocab-card' : entry.type === 'grammar' ? 'grammar-card' : 'material-card';
+  const badgeClass = entry.type === 'vocabulary' ? 'badge-vocab' : entry.type === 'grammar' ? 'badge-grammar' : 'badge-material';
+  const typeName = entry.type === 'vocabulary' ? '生词' : entry.type === 'grammar' ? '语法' : '素材';
+  const checked = appState.selectedEntries.has(entry.id) ? 'checked' : '';
+
+  let content = '';
+  if (entry.type === 'vocabulary') {
+    content = `
+      <div class="card-definition">${escapeHtml(entry.definition || '')}</div>
+      ${entry.examples && entry.examples.length > 0 ? `
+        <div class="card-examples">
+          ${entry.examples.filter(Boolean).map(ex => `<div class="card-example">📌 ${escapeHtml(ex)}</div>`).join('')}
+        </div>` : ''}
+      ${entry.note ? `<div class="card-note">💡 ${escapeHtml(entry.note)}</div>` : ''}`;
+  } else {
+    content = `<div class="card-definition">${escapeHtml((entry.content || '').substring(0, 200))}${(entry.content || '').length > 200 ? '...' : ''}</div>`;
+  }
+
+  return `
+    <div class="entry-card ${typeClass} fade-in" data-id="${entry.id}">
+      <div class="card-header">
+        <div style="display:flex;align-items:center;gap:8px;">
+          ${appState.selectMode ? `<input type="checkbox" class="card-checkbox" ${checked} onchange="toggleEntrySelect('${entry.id}', this.checked)" style="opacity:1;position:relative;transform:none;">` : ''}
+          <span class="card-title">${escapeHtml(entry.type === 'vocabulary' ? entry.word : entry.title)}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="card-badge ${badgeClass}">${typeName}</span>
+          <div class="card-actions">
+            <button class="icon-btn light" onclick="editEntry('${entry.id}')" title="编辑">✏️</button>
+            <button class="icon-btn light" onclick="confirmDeleteEntry('${entry.id}')" title="删除">🗑️</button>
+          </div>
+        </div>
+      </div>
+      ${content}
+      ${catNames.length > 0 ? `<div class="card-tags">${catNames.map(n => `<span class="card-tag">📁 ${escapeHtml(n)}</span>`).join('')}</div>` : ''}
+    </div>`;
+}
+
+// ===================================================================
+// CATEGORY CRUD
+// ===================================================================
+async function createCategory(parentId) {
+  const name = prompt('请输入分类名称:');
+  if (!name || !name.trim()) return;
+
+  const cat = {
+    id: generateId(),
+    name: name.trim(),
+    parentId: parentId || null,
+    expanded: false,
+    createdAt: Date.now(),
+  };
+
+  await saveCategory(cat);
+
+  // Expand parent
+  if (parentId) {
+    const parent = appState.categories.find(c => c.id === parentId);
+    if (parent && !parent.expanded) {
+      parent.expanded = true;
+      await saveCategory(parent);
+    }
+  }
+
+  await loadAllData();
+  renderCategoryTree();
+  showToast('分类创建成功', 'success');
+}
+
+function showContextMenu(e, catId) {
+  e.preventDefault();
+  e.stopPropagation();
+  appState.contextMenuCategoryId = catId;
+  const menu = document.getElementById('contextMenu');
+  menu.style.left = e.clientX + 'px';
+  menu.style.top = e.clientY + 'px';
+  menu.classList.add('show');
+}
+
+document.addEventListener('click', () => {
+  document.getElementById('contextMenu').classList.remove('show');
+});
+
+async function contextAction(action) {
+  const catId = appState.contextMenuCategoryId;
+  document.getElementById('contextMenu').classList.remove('show');
+  if (!catId) return;
+
+  if (action === 'addSub') {
+    await createCategory(catId);
+  } else if (action === 'rename') {
+    const cat = appState.categories.find(c => c.id === catId);
+    if (!cat) return;
+    const name = prompt('请输入新名称:', cat.name);
+    if (!name || !name.trim()) return;
+    cat.name = name.trim();
+    await saveCategory(cat);
+    await loadAllData();
+    renderCategoryTree();
+    showToast('分类已重命名', 'success');
+  } else if (action === 'move') {
+    showMoveCategoryModal(catId);
+  } else if (action === 'delete') {
+    showConfirm('删除分类', '确定要删除此分类及其所有子分类吗？分类中的条目不会被删除。', async () => {
+      if (appState.selectedCategoryId === catId) appState.selectedCategoryId = null;
+      await deleteCategory(catId);
+      await loadAllData();
+      renderCategoryTree();
+      renderContent();
+      updateBreadcrumb();
+      showToast('分类已删除', 'success');
+    });
+  }
+}
+
+function showMoveCategoryModal(catId) {
+  const cat = appState.categories.find(c => c.id === catId);
+  if (!cat) return;
+  const modal = openModal('移动分类: ' + cat.name, '', [
+    { text: '取消', class: 'btn-outline', action: 'closeModal()' },
+    { text: '移动到根级', class: 'btn-primary', action: `moveCategoryTo('${catId}', null)` },
+  ]);
+
+  const otherCats = appState.categories.filter(c => c.id !== catId);
+  const body = document.getElementById('modalBody');
+  body.innerHTML = `
+    <p style="font-size:14px;color:var(--text-secondary);margin-bottom:16px;">选择目标父分类：</p>
+    <div class="category-selector">
+      ${renderCategorySelectorTree(getRootCategories().filter(c => c.id !== catId), false, catId)}
+    </div>
+    <p style="font-size:12px;color:var(--text-light);margin-top:8px;">或者点击底部按钮移动到根级</p>`;
+}
+
+async function moveCategoryTo(catId, newParentId) {
+  const cat = appState.categories.find(c => c.id === catId);
+  if (!cat) return;
+  cat.parentId = newParentId;
+  await saveCategory(cat);
+  await loadAllData();
+  renderCategoryTree();
+  closeModal();
+  showToast('分类已移动', 'success');
+}
+
+// ===================================================================
+// ENTRY CRUD
+// ===================================================================
+function showAddEntryModal(type) {
+  if (!type) {
+    const nt = appState.currentNotebook;
+    type = nt === 'all' ? 'vocabulary' : nt;
+  }
+
+  const title = type === 'vocabulary' ? '新增生词' : type === 'grammar' ? '新增语法' : '新增素材';
+
+  openModal(title, '', [
+    { text: '取消', class: 'btn-outline', action: 'closeModal()' },
+    { text: '保存', class: 'btn-primary', action: `saveNewEntry('${type}')` },
+  ]);
+
+  document.getElementById('modalContainer').classList.add('wide');
+
+  const body = document.getElementById('modalBody');
+
+  // Type selector
+  let typeSelector = `
+    <div class="form-group">
+      <label class="form-label">条目类型</label>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-sm ${type==='vocabulary'?'btn-secondary':'btn-outline'}" onclick="showAddEntryModal('vocabulary')">📝 生词</button>
+        <button class="btn btn-sm ${type==='grammar'?'btn-accent':'btn-outline'}" onclick="showAddEntryModal('grammar')">📐 语法</button>
+        <button class="btn btn-sm ${type==='material'?'btn-primary':'btn-outline'}" onclick="showAddEntryModal('material')">✨ 素材</button>
+      </div>
+    </div>`;
+
+  if (type === 'vocabulary') {
+    body.innerHTML = typeSelector + `
+      <div class="form-group">
+        <label class="form-label form-required">单词</label>
+        <input class="form-input" id="entryWord" placeholder="输入单词或短语">
+      </div>
+      <div class="form-group">
+        <label class="form-label form-required">释义</label>
+        <input class="form-input" id="entryDefinition" placeholder="中文或英文释义">
+      </div>
+      <div class="form-group">
+        <label class="form-label">例句</label>
+        <div class="example-list" id="exampleList">
+          <div class="example-item">
+            <input class="form-input" placeholder="输入例句">
+            <button class="btn btn-sm btn-ghost" onclick="addExampleInput()">➕</button>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">备注</label>
+        <textarea class="form-textarea" id="entryNote" placeholder="可选的备注信息" rows="2"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">归属分类（可多选）</label>
+        <div class="category-selector" id="categorySelectorContainer">
+          ${renderCategorySelectorTree(getRootCategories(), true)}
+        </div>
+      </div>`;
+  } else {
+    body.innerHTML = typeSelector + `
+      <div class="form-group">
+        <label class="form-label form-required">标题</label>
+        <input class="form-input" id="entryTitle" placeholder="输入标题">
+      </div>
+      <div class="form-group">
+        <label class="form-label">内容</label>
+        <textarea class="form-textarea" id="entryContent" placeholder="输入内容" rows="8" style="min-height:200px;"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">归属分类（可多选）</label>
+        <div class="category-selector" id="categorySelectorContainer">
+          ${renderCategorySelectorTree(getRootCategories(), true)}
+        </div>
+      </div>`;
+  }
+}
+
+function renderCategorySelectorTree(categories, showCheckboxes, excludeId) {
+  return categories.filter(c => c.id !== excludeId).map(cat => {
+    const children = getChildCategories(cat.id).filter(c => c.id !== excludeId);
+    const hasChildren = children.length > 0;
+    return `
+      <div class="tree-node">
+        <div class="tree-node-header" style="color:var(--text-primary);"
+             ${!showCheckboxes ? `onclick="moveCategoryTo('${appState.contextMenuCategoryId}', '${cat.id}')"` : ''}>
+          <span class="tree-toggle ${hasChildren ? '' : 'hidden'} expanded" onclick="event.stopPropagation(); this.classList.toggle('expanded'); this.closest('.tree-node').querySelector('.tree-children').classList.toggle('collapsed')">▶</span>
+          ${showCheckboxes ? `<input type="checkbox" class="tree-checkbox cat-select-cb" data-cat-id="${cat.id}" onclick="event.stopPropagation()">` : ''}
+          <span class="tree-icon">${hasChildren ? '📁' : '📄'}</span>
+          <span class="tree-label">${escapeHtml(cat.name)}</span>
+        </div>
+        ${hasChildren ? `<div class="tree-children">${renderCategorySelectorTree(children, showCheckboxes, excludeId)}</div>` : ''}
+      </div>`;
+  }).join('');
+}
+
+function addExampleInput() {
+  const list = document.getElementById('exampleList');
+  const item = document.createElement('div');
+  item.className = 'example-item';
+  item.innerHTML = `
+    <input class="form-input" placeholder="输入例句">
+    <button class="btn btn-sm btn-ghost" onclick="this.parentElement.remove()">✖️</button>`;
+  list.appendChild(item);
+}
+
+async function saveNewEntry(type) {
+  const entry = { id: generateId(), type, createdAt: Date.now() };
+
+  if (type === 'vocabulary') {
+    const word = document.getElementById('entryWord').value.trim();
+    const definition = document.getElementById('entryDefinition').value.trim();
+    if (!word) { showToast('请输入单词', 'error'); return; }
+    if (!definition) { showToast('请输入释义', 'error'); return; }
+    entry.word = word;
+    entry.definition = definition;
+    entry.examples = Array.from(document.querySelectorAll('#exampleList input')).map(i => i.value.trim()).filter(Boolean);
+    entry.note = document.getElementById('entryNote').value.trim();
+  } else {
+    const title = document.getElementById('entryTitle').value.trim();
+    if (!title) { showToast('请输入标题', 'error'); return; }
+    entry.title = title;
+    entry.content = document.getElementById('entryContent').value.trim();
+  }
+
+  await saveEntry(entry);
+
+  // Get selected categories
+  const selectedCats = Array.from(document.querySelectorAll('.cat-select-cb:checked')).map(cb => cb.dataset.catId);
+  if (selectedCats.length > 0) {
+    await setEntryCategories(entry.id, selectedCats);
+  }
+
+  await loadAllData();
+  renderCategoryTree();
+  renderContent();
+  updateStats();
+  closeModal();
+  showToast('条目已保存', 'success');
+}
+
+async function editEntry(entryId) {
+  const entry = appState.entries.find(e => e.id === entryId);
+  if (!entry) return;
+
+  const type = entry.type;
+  const title = type === 'vocabulary' ? '编辑生词' : type === 'grammar' ? '编辑语法' : '编辑素材';
+
+  openModal(title, '', [
+    { text: '取消', class: 'btn-outline', action: 'closeModal()' },
+    { text: '保存', class: 'btn-primary', action: `updateEntry('${entryId}')` },
+  ]);
+
+  document.getElementById('modalContainer').classList.add('wide');
+  const body = document.getElementById('modalBody');
+  const catIds = getEntryCategoryIds(entryId);
+
+  if (type === 'vocabulary') {
+    body.innerHTML = `
+      <div class="form-group">
+        <label class="form-label form-required">单词</label>
+        <input class="form-input" id="entryWord" value="${escapeAttr(entry.word || '')}">
+      </div>
+      <div class="form-group">
+        <label class="form-label form-required">释义</label>
+        <input class="form-input" id="entryDefinition" value="${escapeAttr(entry.definition || '')}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">例句</label>
+        <div class="example-list" id="exampleList">
+          ${(entry.examples || ['']).map((ex, i) => `
+            <div class="example-item">
+              <input class="form-input" value="${escapeAttr(ex)}" placeholder="输入例句">
+              ${i === 0 ? `<button class="btn btn-sm btn-ghost" onclick="addExampleInput()">➕</button>` : `<button class="btn btn-sm btn-ghost" onclick="this.parentElement.remove()">✖️</button>`}
+            </div>`).join('')}
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">备注</label>
+        <textarea class="form-textarea" id="entryNote" rows="2">${escapeHtml(entry.note || '')}</textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">归属分类（可多选）</label>
+        <div class="category-selector" id="categorySelectorContainer">
+          ${renderCategorySelectorTree(getRootCategories(), true)}
+        </div>
+      </div>`;
+  } else {
+    body.innerHTML = `
+      <div class="form-group">
+        <label class="form-label form-required">标题</label>
+        <input class="form-input" id="entryTitle" value="${escapeAttr(entry.title || '')}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">内容</label>
+        <textarea class="form-textarea" id="entryContent" rows="8" style="min-height:200px;">${escapeHtml(entry.content || '')}</textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">归属分类（可多选）</label>
+        <div class="category-selector" id="categorySelectorContainer">
+          ${renderCategorySelectorTree(getRootCategories(), true)}
+        </div>
+      </div>`;
+  }
+
+  // Pre-check categories
+  setTimeout(() => {
+    catIds.forEach(catId => {
+      const cb = document.querySelector(`.cat-select-cb[data-cat-id="${catId}"]`);
+      if (cb) cb.checked = true;
+    });
+  }, 50);
+}
+
+async function updateEntry(entryId) {
+  const entry = appState.entries.find(e => e.id === entryId);
+  if (!entry) return;
+
+  if (entry.type === 'vocabulary') {
+    const word = document.getElementById('entryWord').value.trim();
+    const definition = document.getElementById('entryDefinition').value.trim();
+    if (!word) { showToast('请输入单词', 'error'); return; }
+    if (!definition) { showToast('请输入释义', 'error'); return; }
+    entry.word = word;
+    entry.definition = definition;
+    entry.examples = Array.from(document.querySelectorAll('#exampleList input')).map(i => i.value.trim()).filter(Boolean);
+    entry.note = document.getElementById('entryNote').value.trim();
+  } else {
+    const title = document.getElementById('entryTitle').value.trim();
+    if (!title) { showToast('请输入标题', 'error'); return; }
+    entry.title = title;
+    entry.content = document.getElementById('entryContent').value.trim();
+  }
+
+  await saveEntry(entry);
+
+  const selectedCats = Array.from(document.querySelectorAll('.cat-select-cb:checked')).map(cb => cb.dataset.catId);
+  await setEntryCategories(entry.id, selectedCats);
+
+  await loadAllData();
+  renderCategoryTree();
+  renderContent();
+  updateStats();
+  closeModal();
+  showToast('条目已更新', 'success');
+}
+
+function confirmDeleteEntry(entryId) {
+  const entry = appState.entries.find(e => e.id === entryId);
+  if (!entry) return;
+  const name = entry.word || entry.title || '此条目';
+  showConfirm('删除条目', `确定要删除"${name}"吗？此操作不可撤销。`, async () => {
+    await deleteEntry(entryId);
+    await loadAllData();
+    renderCategoryTree();
+    renderContent();
+    updateStats();
+    showToast('条目已删除', 'success');
+  });
+}
+
+// ===================================================================
+// SELECT MODE
+// ===================================================================
+function toggleSelectMode() {
+  appState.selectMode = !appState.selectMode;
+  appState.selectedEntries.clear();
+  const btn = document.getElementById('selectModeBtn');
+  btn.textContent = appState.selectMode ? '❌ 取消选择' : '☑️ 选择';
+  btn.className = appState.selectMode ? 'btn btn-danger' : 'btn btn-outline';
+  renderContent();
+}
+
+function toggleEntrySelect(entryId, checked) {
+  if (checked) {
+    appState.selectedEntries.add(entryId);
+  } else {
+    appState.selectedEntries.delete(entryId);
+  }
+  const countEl = document.getElementById('selectedCount');
+  if (countEl) countEl.textContent = appState.selectedEntries.size;
+}
+
+function toggleSelectAll(checked) {
+  const entries = getFilteredEntries();
+  if (checked) {
+    entries.forEach(e => appState.selectedEntries.add(e.id));
+  } else {
+    appState.selectedEntries.clear();
+  }
+  renderContent();
+}
+
+async function deleteSelected() {
+  if (appState.selectedEntries.size === 0) { showToast('请先选择条目', 'error'); return; }
+  showConfirm('批量删除', `确定要删除选中的 ${appState.selectedEntries.size} 个条目吗？`, async () => {
+    for (const id of appState.selectedEntries) {
+      await deleteEntry(id);
+    }
+    appState.selectedEntries.clear();
+    await loadAllData();
+    renderCategoryTree();
+    renderContent();
+    updateStats();
+    showToast('已批量删除', 'success');
+  });
+}
+
+// ===================================================================
+// SEARCH
+// ===================================================================
+let searchTimeout = null;
+document.getElementById('globalSearch').addEventListener('input', (e) => {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => performSearch(e.target.value.trim()), 300);
+});
+
+document.getElementById('globalSearch').addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    e.target.value = '';
+    appState.selectedCategoryId = null;
+    renderContent();
+    updateBreadcrumb();
+  }
+});
+
+function performSearch(query) {
+  if (!query) {
+    renderContent();
+    updateBreadcrumb();
+    return;
+  }
+
+  const lowerQuery = query.toLowerCase();
+
+  // Score entries
+  function scoreEntry(entry) {
+    let score = 0;
+    if (entry.type === 'vocabulary') {
+      if (entry.word && entry.word.toLowerCase() === lowerQuery) score = 100;
+      else if (entry.word && entry.word.toLowerCase().includes(lowerQuery)) score = 80;
+      if (entry.definition && entry.definition.toLowerCase().includes(lowerQuery)) score = Math.max(score, 60);
+      if (entry.examples) {
+        for (const ex of entry.examples) {
+          if (ex.toLowerCase().includes(lowerQuery)) { score = Math.max(score, 40); break; }
+        }
+      }
+      if (entry.note && entry.note.toLowerCase().includes(lowerQuery)) score = Math.max(score, 30);
+    } else {
+      if (entry.title && entry.title.toLowerCase() === lowerQuery) score = 100;
+      else if (entry.title && entry.title.toLowerCase().includes(lowerQuery)) score = 70;
+      if (entry.content && entry.content.toLowerCase().includes(lowerQuery)) score = Math.max(score, 40);
+    }
+    return score;
+  }
+
+  const results = appState.entries.map(e => ({ entry: e, score: scoreEntry(e) }))
+    .filter(r => r.score > 0)
+    .sort((a, b) => b.score - a.score);
+
+  const vocabResults = results.filter(r => r.entry.type === 'vocabulary');
+  const grammarResults = results.filter(r => r.entry.type === 'grammar');
+  const materialResults = results.filter(r => r.entry.type === 'material');
+
+  showSearchResults(query, vocabResults, grammarResults, materialResults);
+}
+
+function showSearchResults(query, vocabResults, grammarResults, materialResults) {
+  const body = document.getElementById('contentBody');
+
+  document.getElementById('breadcrumb').innerHTML = `<span class="current">🔍 搜索结果: "${escapeHtml(query)}"</span>`;
+
+  let activeTab = 'vocab';
+  if (vocabResults.length === 0 && grammarResults.length > 0) activeTab = 'grammar';
+  else if (vocabResults.length === 0 && grammarResults.length === 0 && materialResults.length > 0) activeTab = 'material';
+
+  body.innerHTML = `
+    <div class="search-results-container">
+      <div class="search-tabs">
+        <button class="search-tab ${activeTab==='vocab'?'active':''}" onclick="switchSearchTab('vocab')">
+          📝 生词 <span class="tab-count">${vocabResults.length}</span>
+        </button>
+        <button class="search-tab ${activeTab==='grammar'?'active':''}" onclick="switchSearchTab('grammar')">
+          📐 语法 <span class="tab-count">${grammarResults.length}</span>
+        </button>
+        <button class="search-tab ${activeTab==='material'?'active':''}" onclick="switchSearchTab('material')">
+          ✨ 素材 <span class="tab-count">${materialResults.length}</span>
+        </button>
+      </div>
+      <div class="search-tab-content" id="searchTabVocab" style="display:${activeTab==='vocab'?'block':'none'}">
+        ${vocabResults.length === 0 ? '<p style="text-align:center;color:var(--text-light);padding:20px;">没有找到相关生词</p>' :
+          vocabResults.map(r => renderSearchCard(r.entry, query)).join('')}
+      </div>
+      <div class="search-tab-content" id="searchTabGrammar" style="display:${activeTab==='grammar'?'block':'none'}">
+        ${grammarResults.length === 0 ? '<p style="text-align:center;color:var(--text-light);padding:20px;">没有找到相关语法</p>' :
+          grammarResults.map(r => renderSearchCard(r.entry, query)).join('')}
+      </div>
+      <div class="search-tab-content" id="searchTabMaterial" style="display:${activeTab==='material'?'block':'none'}">
+        ${materialResults.length === 0 ? '<p style="text-align:center;color:var(--text-light);padding:20px;">没有找到相关素材</p>' :
+          materialResults.map(r => renderSearchCard(r.entry, query)).join('')}
+      </div>
+    </div>`;
+}
+
+function switchSearchTab(tab) {
+  document.querySelectorAll('.search-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.search-tab-content').forEach(c => c.style.display = 'none');
+  event.target.closest('.search-tab').classList.add('active');
+  const tabId = tab === 'vocab' ? 'searchTabVocab' : tab === 'grammar' ? 'searchTabGrammar' : 'searchTabMaterial';
+  document.getElementById(tabId).style.display = 'block';
+}
+
+function renderSearchCard(entry, query) {
+  const highlight = (text) => {
+    if (!text || !query) return escapeHtml(text || '');
+    const regex = new RegExp(`(${escapeRegex(query)})`, 'gi');
+    return escapeHtml(text).replace(new RegExp(`(${escapeRegex(escapeHtml(query))})`, 'gi'), '<mark>$1</mark>');
+  };
+
+  const typeClass = entry.type === 'vocabulary' ? 'vocab-card' : entry.type === 'grammar' ? 'grammar-card' : 'material-card';
+
+  let content = '';
+  if (entry.type === 'vocabulary') {
+    content = `
+      <div class="card-definition">${highlight(entry.definition)}</div>
+      ${entry.examples && entry.examples.length > 0 ? `
+        <div class="card-examples">
+          ${entry.examples.filter(Boolean).map(ex => `<div class="card-example">📌 ${highlight(ex)}</div>`).join('')}
+        </div>` : ''}
+      ${entry.note ? `<div class="card-note">💡 ${highlight(entry.note)}</div>` : ''}`;
+  } else {
+    content = `<div class="card-definition">${highlight((entry.content || '').substring(0, 200))}</div>`;
+  }
+
+  return `
+    <div class="entry-card ${typeClass} fade-in">
+      <div class="card-header">
+        <span class="card-title">${highlight(entry.type === 'vocabulary' ? entry.word : entry.title)}</span>
+        <div class="card-actions" style="opacity:1">
+          <button class="icon-btn light" onclick="editEntry('${entry.id}')" title="编辑">✏️</button>
+        </div>
+      </div>
+      ${content}
+    </div>`;
+}
+
+// ===================================================================
+// QUIZ
+// ===================================================================
+let quizState = {
+  words: [],
+  currentIndex: 0,
+  mode: 'spell', // 'spell' or 'recognize'
+  interfaceMode: 'practice', // 'practice' or 'exam'
+  answers: [],
+  submitted: false,
+};
+
+function showQuizSetup() {
+  // Only vocab
+  const vocabEntries = appState.entries.filter(e => e.type === 'vocabulary');
+  if (vocabEntries.length === 0) {
+    showToast('生词本中没有单词，请先添加单词', 'error');
+    return;
+  }
+
+  openModal('测验设置', '', [
+    { text: '取消', class: 'btn-outline', action: 'closeModal()' },
+    { text: '开始测验', class: 'btn-primary', action: 'startQuiz()' },
+  ]);
+
+  document.getElementById('modalContainer').classList.add('wide');
+
+  const body = document.getElementById('modalBody');
+  body.innerHTML = `
+    <div class="quiz-setup">
+      <div class="quiz-option-group">
+        <h4>📋 选择范围</h4>
+        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">
+          从分类树中勾选要测验的范围，不选则从全部生词中抽取。
+        </p>
+        <div class="category-selector" style="max-height:250px;">
+          ${renderCategorySelectorTree(getRootCategories(), true)}
+        </div>
+      </div>
+
+      <div class="quiz-option-group">
+        <h4>🔢 抽取数量</h4>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <input class="form-input" id="quizCount" type="number" min="1" max="${vocabEntries.length}" value="${Math.min(10, vocabEntries.length)}" style="width:120px;">
+          <span style="font-size:13px;color:var(--text-secondary);">/ 可用 ${vocabEntries.length} 个单词</span>
+        </div>
+      </div>
+
+      <div class="quiz-option-group">
+        <h4>📝 出题模式</h4>
+        <div class="radio-group">
+          <label class="radio-item">
+            <input type="radio" name="quizMode" value="spell" checked> 拼写/回忆模式（给单词写释义）
+          </label>
+          <label class="radio-item">
+            <input type="radio" name="quizMode" value="recognize"> 识词模式（给释义写单词）
+          </label>
+        </div>
+      </div>
+
+      <div class="quiz-option-group">
+        <h4>🖥️ 测验界面</h4>
+        <div class="radio-group">
+          <label class="radio-item">
+            <input type="radio" name="quizInterface" value="practice" checked> 练习模式（即时反馈）
+          </label>
+          <label class="radio-item">
+            <input type="radio" name="quizInterface" value="exam"> 试卷模式（导出PDF）
+          </label>
+        </div>
+      </div>
+    </div>`;
+}
+
+function startQuiz() {
+  const count = parseInt(document.getElementById('quizCount').value) || 10;
+  const mode = document.querySelector('input[name="quizMode"]:checked').value;
+  const interfaceMode = document.querySelector('input[name="quizInterface"]:checked').value;
+
+  // Get selected categories
+  const selectedCats = Array.from(document.querySelectorAll('.cat-select-cb:checked')).map(cb => cb.dataset.catId);
+
+  let vocabEntries;
+  if (selectedCats.length > 0) {
+    const entryIdSet = new Set();
+    selectedCats.forEach(catId => {
+      getCategoryEntries(catId).filter(e => e.type === 'vocabulary').forEach(e => entryIdSet.add(e.id));
+    });
+    vocabEntries = appState.entries.filter(e => entryIdSet.has(e.id));
+  } else {
+    vocabEntries = appState.entries.filter(e => e.type === 'vocabulary');
+  }
+
+  if (vocabEntries.length === 0) {
+    showToast('所选范围内没有单词', 'error');
+    return;
+  }
+
+  // Shuffle and pick
+  const shuffled = [...vocabEntries].sort(() => Math.random() - 0.5);
+  const picked = shuffled.slice(0, Math.min(count, shuffled.length));
+
+  quizState = {
+    words: picked,
+    currentIndex: 0,
+    mode,
+    interfaceMode,
+    answers: new Array(picked.length).fill(''),
+    submitted: false,
+  };
+
+  closeModal();
+
+  if (interfaceMode === 'exam') {
+    renderExamPaper();
+  } else {
+    renderPracticeQuiz();
+  }
+}
+
+function renderPracticeQuiz() {
+  const body = document.getElementById('contentBody');
+  const { words, currentIndex, mode } = quizState;
+  const word = words[currentIndex];
+  const progress = ((currentIndex) / words.length * 100);
+
+  const question = mode === 'spell' ? word.word : word.definition;
+  const hint = mode === 'spell' ? '请输入该单词的释义' : '请输入对应的单词';
+
+  body.innerHTML = `
+    <div class="quiz-practice">
+      <div class="quiz-progress">第 ${currentIndex + 1} 题，共 ${words.length} 题</div>
+      <div class="quiz-progress-bar"><div class="quiz-progress-fill" style="width:${progress}%"></div></div>
+      <div class="quiz-question">${escapeHtml(question)}</div>
+      <div class="quiz-hint">${hint}</div>
+      <input class="quiz-input" id="quizAnswer" placeholder="输入你的答案..." autofocus
+             onkeydown="if(event.key==='Enter')checkAnswer()">
+      <div id="quizFeedback"></div>
+      <div style="margin-top:24px;display:flex;gap:12px;justify-content:center;">
+        <button class="btn btn-outline" onclick="exitQuiz()">退出测验</button>
+        <button class="btn btn-primary" id="quizCheckBtn" onclick="checkAnswer()">✅ 提交答案</button>
+        <button class="btn btn-secondary" id="quizNextBtn" onclick="nextQuestion()" style="display:none;">下一题 ➡️</button>
+      </div>
+    </div>`;
+
+  setTimeout(() => document.getElementById('quizAnswer')?.focus(), 100);
+}
+
+function checkAnswer() {
+  const input = document.getElementById('quizAnswer');
+  const answer = input.value.trim();
+  if (!answer) return;
+
+  const { words, currentIndex, mode } = quizState;
+  const word = words[currentIndex];
+  const correctAnswer = mode === 'spell' ? word.definition : word.word;
+
+  quizState.answers[currentIndex] = answer;
+
+  const isCorrect = answer.toLowerCase() === correctAnswer.toLowerCase();
+  const feedback = document.getElementById('quizFeedback');
+
+  if (isCorrect) {
+    feedback.innerHTML = `<div class="quiz-feedback correct">✅ 正确！</div>`;
+  } else {
+    feedback.innerHTML = `<div class="quiz-feedback incorrect">❌ 错误！正确答案: <strong>${escapeHtml(correctAnswer)}</strong></div>`;
+  }
+
+  input.disabled = true;
+  document.getElementById('quizCheckBtn').style.display = 'none';
+  document.getElementById('quizNextBtn').style.display = '';
+  document.getElementById('quizNextBtn').textContent = currentIndex >= words.length - 1 ? '查看结果 📊' : '下一题 ➡️';
+}
+
+function nextQuestion() {
+  quizState.currentIndex++;
+  if (quizState.currentIndex >= quizState.words.length) {
+    showQuizResults();
+  } else {
+    renderPracticeQuiz();
+  }
+}
+
+function showQuizResults() {
+  const { words, answers, mode } = quizState;
+  let correct = 0;
+  const details = words.map((w, i) => {
+    const correctAnswer = mode === 'spell' ? w.definition : w.word;
+    const isCorrect = answers[i].toLowerCase() === correctAnswer.toLowerCase();
+    if (isCorrect) correct++;
+    return { word: w, answer: answers[i], correctAnswer, isCorrect };
+  });
+
+  const percentage = Math.round((correct / words.length) * 100);
+
+  const body = document.getElementById('contentBody');
+  body.innerHTML = `
+    <div class="quiz-score">
+      <div class="score-circle">${percentage}%</div>
+      <h2>测验完成！</h2>
+      <p style="color:var(--text-secondary);margin-bottom:24px;">
+        共 ${words.length} 题，正确 ${correct} 题，错误 ${words.length - correct} 题
+      </p>
+      <button class="btn btn-primary" onclick="exitQuiz()">返回</button>
+      <button class="btn btn-secondary" onclick="startQuiz(); showQuizSetup();" style="margin-left:8px;">再来一次</button>
+    </div>
+    <div style="max-width:600px;margin:0 auto;">
+      <h3 style="margin-bottom:16px;">详细结果</h3>
+      ${details.map((d, i) => `
+        <div class="entry-card ${d.isCorrect ? '' : 'vocab-card'}" style="border-left-color:${d.isCorrect ? 'var(--success)' : 'var(--danger)'}">
+          <div class="card-header">
+            <span class="card-title">${i+1}. ${escapeHtml(mode === 'spell' ? d.word.word : d.word.definition)}</span>
+            <span style="font-size:20px;">${d.isCorrect ? '✅' : '❌'}</span>
+          </div>
+          <div class="card-definition">
+            你的答案: <strong>${escapeHtml(d.answer)}</strong>
+            ${!d.isCorrect ? ` | 正确答案: <strong style="color:var(--success)">${escapeHtml(d.correctAnswer)}</strong>` : ''}
+          </div>
+        </div>`).join('')}
+    </div>`;
+}
+
+function renderExamPaper() {
+  const { words, mode } = quizState;
+  const body = document.getElementById('contentBody');
+  const date = new Date().toLocaleDateString('zh-CN');
+  const modeText = mode === 'spell' ? '拼写/回忆模式（看单词写释义）' : '识词模式（看释义写单词）';
+
+  body.innerHTML = `
+    <div style="text-align:center;margin-bottom:20px;">
+      <button class="btn btn-primary" onclick="printExam()">🖨️ 打印 / 导出PDF</button>
+      <button class="btn btn-outline" onclick="exitQuiz()" style="margin-left:8px;">返回</button>
+    </div>
+    <div class="exam-paper" id="examPaper">
+      <h1>📖 英语词汇测验</h1>
+      <div class="exam-info">
+        日期: ${date} | 模式: ${modeText} | 题数: ${words.length}
+      </div>
+      <div class="exam-info">姓名: _____________ 得分: _______ / ${words.length}</div>
+      <div class="exam-section">
+        <h3>请根据提示写出对应的${mode === 'spell' ? '释义' : '单词'}：</h3>
+        ${words.map((w, i) => {
+          const question = mode === 'spell' ? w.word : w.definition;
+          return `<div class="exam-question"><span class="q-num">${i + 1}.</span> ${escapeHtml(question)} : <span class="exam-blank"></span></div>`;
+        }).join('')}
+      </div>
+      <div class="exam-section" style="margin-top:40px;border-top:2px dashed #ccc;padding-top:20px;">
+        <h3>参考答案（请裁剪后保管）</h3>
+        <div style="font-size:12px;column-count:2;column-gap:20px;">
+          ${words.map((w, i) => {
+            const answer = mode === 'spell' ? w.definition : w.word;
+            return `<p>${i + 1}. ${escapeHtml(answer)}</p>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>`;
+}
+
+function printExam() {
+  window.print();
+}
+
+function exitQuiz() {
+  renderContent();
+  updateBreadcrumb();
+}
+
+// ===================================================================
+// IMPORT / EXPORT
+// ===================================================================
+function showImportModal() {
+  openModal('导入数据', '', [
+    { text: '取消', class: 'btn-outline', action: 'closeModal()' },
+    { text: '导入', class: 'btn-primary', action: 'performImport()' },
+  ]);
+
+  document.getElementById('modalContainer').classList.add('wide');
+
+  const body = document.getElementById('modalBody');
+  body.innerHTML = `
+    <div class="form-group">
+      <label class="form-label">选择 JSON 文件</label>
+      <input type="file" class="form-input" id="importFile" accept=".json" style="padding:8px;">
+    </div>
+    <div class="form-group">
+      <label class="form-label">或者粘贴 JSON 数据</label>
+      <textarea class="form-textarea" id="importText" rows="8" placeholder="粘贴 JSON 数据..."></textarea>
+    </div>
+    <details style="margin-top:16px;">
+      <summary style="cursor:pointer;font-size:14px;font-weight:600;color:var(--primary);">📄 查看 JSON 模板示例</summary>
+      <div class="json-template" style="margin-top:8px;">${getJsonTemplate()}</div>
+      <button class="btn btn-sm btn-outline" style="margin-top:8px;" onclick="copyTemplate()">📋 复制模板</button>
+    </details>`;
+}
+
+function getJsonTemplate() {
+  return escapeHtml(JSON.stringify({
+    categories: [
+      { name: "中华传统文化类", children: [{ name: "武术", children: [] }] },
+      { name: "科技发展类", children: [{ name: "人工智能", children: [] }] }
+    ],
+    vocabulary: [
+      {
+        word: "Kung Fu",
+        definition: "功夫；中国武术",
+        examples: ["Kung Fu is a traditional Chinese martial art.", "He has been practicing Kung Fu since childhood."],
+        note: "也可写作 Gongfu",
+        categories: ["中华传统文化类/武术"]
+      }
+    ],
+    grammar: [
+      {
+        title: "虚拟语气",
+        content: "虚拟语气用于表达与事实相反的假设...",
+        categories: ["语法专题"]
+      }
+    ],
+    material: [
+      {
+        title: "高级替换词: important",
+        content: "crucial, vital, essential, significant, paramount...",
+        categories: ["写作素材"]
+      }
+    ]
+  }, null, 2));
+}
+
+function copyTemplate() {
+  const template = JSON.stringify({
+    categories: [
+      { name: "分类名称", children: [{ name: "子分类", children: [] }] }
+    ],
+    vocabulary: [{ word: "单词", definition: "释义", examples: ["例句"], note: "备注", categories: ["分类路径"] }],
+    grammar: [{ title: "标题", content: "内容", categories: ["分类路径"] }],
+    material: [{ title: "标题", content: "内容", categories: ["分类路径"] }]
+  }, null, 2);
+  navigator.clipboard.writeText(template).then(() => showToast('模板已复制到剪贴板', 'success'));
+}
+
+async function performImport() {
+  let jsonData;
+  const fileInput = document.getElementById('importFile');
+  const textInput = document.getElementById('importText');
+
+  if (fileInput.files.length > 0) {
+    try {
+      const text = await fileInput.files[0].text();
+      jsonData = JSON.parse(text);
+    } catch (e) {
+      showToast('文件解析失败: ' + e.message, 'error');
+      return;
+    }
+  } else if (textInput.value.trim()) {
+    try {
+      jsonData = JSON.parse(textInput.value.trim());
+    } catch (e) {
+      showToast('JSON 解析失败: ' + e.message, 'error');
+      return;
+    }
+  } else {
+    showToast('请选择文件或粘贴数据', 'error');
+    return;
+  }
+
+  try {
+    await importData(jsonData);
+    await loadAllData();
+    renderCategoryTree();
+    renderContent();
+    updateStats();
+    closeModal();
+    showToast('数据导入成功!', 'success');
+  } catch (e) {
+    showToast('导入失败: ' + e.message, 'error');
+  }
+}
+
+async function importData(data) {
+  // Import categories
+  const categoryMap = {}; // path -> id
+
+  async function importCategoryTree(cats, parentId, pathPrefix) {
+    if (!Array.isArray(cats)) return;
+    for (const c of cats) {
+      const path = pathPrefix ? pathPrefix + '/' + c.name : c.name;
+      // Check if category exists
+      let existing = appState.categories.find(ec =>
+        ec.name === c.name && ec.parentId === parentId
+      );
+      let catId;
+      if (existing) {
+        catId = existing.id;
+      } else {
+        catId = generateId();
+        await dbPut('categories', { id: catId, name: c.name, parentId, expanded: false, createdAt: Date.now() });
+      }
+      categoryMap[path] = catId;
+      if (c.children && c.children.length > 0) {
+        await importCategoryTree(c.children, catId, path);
+      }
+    }
+  }
+
+  if (data.categories) {
+    await loadAllData(); // Refresh
+    await importCategoryTree(data.categories, null, '');
+    await loadAllData();
+  }
+
+  // Helper to resolve category path
+  function resolveCategoryPath(path) {
+    // Direct match in map
+    if (categoryMap[path]) return categoryMap[path];
+    // Try to find by name matching
+    const parts = path.split('/');
+    let parentId = null;
+    let currentCats = appState.categories;
+    for (const part of parts) {
+      const found = currentCats.find(c => c.name === part && c.parentId === parentId);
+      if (found) {
+        parentId = found.id;
+      } else {
+        return null;
+      }
+    }
+    return parentId;
+  }
+
+  // Import entries
+  async function importEntries(entries, type) {
+    if (!Array.isArray(entries)) return;
+    for (const item of entries) {
+      // Check for duplicate
+      let existing;
+      if (type === 'vocabulary') {
+        existing = appState.entries.find(e => e.type === type && e.word === item.word);
+      } else {
+        existing = appState.entries.find(e => e.type === type && e.title === item.title);
+      }
+
+      let entryId;
+      if (existing) {
+        // Merge: update fields
+        Object.assign(existing, item, { id: existing.id, type, createdAt: existing.createdAt });
+        await dbPut('entries', existing);
+        entryId = existing.id;
+      } else {
+        entryId = generateId();
+        const entry = { id: entryId, type, createdAt: Date.now(), ...item };
+        delete entry.categories; // Don't store categories in entry
+        await dbPut('entries', entry);
+      }
+
+      // Link categories
+      if (item.categories && Array.isArray(item.categories)) {
+        await loadAllData();
+        for (const catPath of item.categories) {
+          let catId = resolveCategoryPath(catPath);
+          if (!catId) {
+            // Auto-create category
+            const parts = catPath.split('/');
+            let parentId = null;
+            for (const part of parts) {
+              let found = appState.categories.find(c => c.name === part && c.parentId === parentId);
+              if (!found) {
+                const newId = generateId();
+                await dbPut('categories', { id: newId, name: part, parentId, expanded: false, createdAt: Date.now() });
+                await loadAllData();
+                catId = newId;
+                parentId = newId;
+              } else {
+                catId = found.id;
+                parentId = found.id;
+              }
+            }
+          }
+          if (catId) {
+            // Check if link exists
+            await loadAllData();
+            const existingLink = appState.entryCategories.find(ec => ec.entryId === entryId && ec.categoryId === catId);
+            if (!existingLink) {
+              await dbPut('entry_categories', { id: generateId(), entryId, categoryId: catId });
+            }
+          }
+        }
+      }
+    }
+  }
+
+  if (data.vocabulary) await importEntries(data.vocabulary, 'vocabulary');
+  await loadAllData();
+  if (data.grammar) await importEntries(data.grammar, 'grammar');
+  await loadAllData();
+  if (data.material) await importEntries(data.material, 'material');
+  await loadAllData();
+}
+
+function showExportModal() {
+  openModal('导出数据', '', [
+    { text: '取消', class: 'btn-outline', action: 'closeModal()' },
+    { text: '导出选中', class: 'btn-primary', action: 'performExport()' },
+  ]);
+
+  const body = document.getElementById('modalBody');
+  body.innerHTML = `
+    <div class="form-group">
+      <label class="form-label">选择导出范围</label>
+      <div class="radio-group" style="margin-bottom:16px;">
+        <label class="radio-item"><input type="radio" name="exportScope" value="all" checked> 全部数据</label>
+        <label class="radio-item"><input type="radio" name="exportScope" value="notebook"> 按笔记本</label>
+        <label class="radio-item"><input type="radio" name="exportScope" value="category"> 按分类</label>
+      </div>
+    </div>
+    <div id="exportScopeDetail"></div>`;
+
+  document.querySelectorAll('input[name="exportScope"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      const detail = document.getElementById('exportScopeDetail');
+      if (e.target.value === 'notebook') {
+        detail.innerHTML = `
+          <div class="checkbox-group">
+            <label class="checkbox-item"><input type="checkbox" value="vocabulary" checked> 📝 生词本</label>
+            <label class="checkbox-item"><input type="checkbox" value="grammar" checked> 📐 语法本</label>
+            <label class="checkbox-item"><input type="checkbox" value="material" checked> ✨ 素材本</label>
+          </div>`;
+      } else if (e.target.value === 'category') {
+        detail.innerHTML = `
+          <div class="category-selector" style="max-height:300px;">
+            ${renderCategorySelectorTree(getRootCategories(), true)}
+          </div>`;
+      } else {
+        detail.innerHTML = '';
+      }
+    });
+  });
+}
+
+async function exportSelected() {
+  if (appState.selectedEntries.size === 0) {
+    showToast('请先选择条目', 'error');
+    return;
+  }
+  const entries = appState.entries.filter(e => appState.selectedEntries.has(e.id));
+  const exportData = buildExportData(entries);
+  downloadJson(exportData, 'learning-hub-export.json');
+  showToast(`已导出 ${entries.length} 个条目`, 'success');
+}
+
+function performExport() {
+  const scope = document.querySelector('input[name="exportScope"]:checked').value;
+  let entries;
+
+  if (scope === 'all') {
+    entries = [...appState.entries];
+  } else if (scope === 'notebook') {
+    const types = Array.from(document.querySelectorAll('#exportScopeDetail input:checked')).map(cb => cb.value);
+    entries = appState.entries.filter(e => types.includes(e.type));
+  } else {
+    const catIds = Array.from(document.querySelectorAll('.cat-select-cb:checked')).map(cb => cb.dataset.catId);
+    const entryIdSet = new Set();
+    catIds.forEach(catId => {
+      getCategoryEntries(catId).forEach(e => entryIdSet.add(e.id));
+    });
+    entries = appState.entries.filter(e => entryIdSet.has(e.id));
+  }
+
+  if (entries.length === 0) {
+    showToast('没有要导出的数据', 'error');
+    return;
+  }
+
+  const exportData = buildExportData(entries);
+  downloadJson(exportData, 'learning-hub-export.json');
+  closeModal();
+  showToast(`已导出 ${entries.length} 个条目`, 'success');
+}
+
+function buildExportData(entries) {
+  // Build category tree
+  function buildCatTree(parentId) {
+    return appState.categories.filter(c => c.parentId === parentId).map(c => ({
+      name: c.name,
+      children: buildCatTree(c.id)
+    }));
+  }
+
+  const data = {
+    categories: buildCatTree(null),
+    vocabulary: [],
+    grammar: [],
+    material: [],
+  };
+
+  entries.forEach(e => {
+    const catIds = getEntryCategoryIds(e.id);
+    const catPaths = catIds.map(id => getCategoryPath(id));
+    const item = { ...e, categories: catPaths };
+    delete item.id;
+    delete item.type;
+    delete item.createdAt;
+
+    if (e.type === 'vocabulary') data.vocabulary.push(item);
+    else if (e.type === 'grammar') data.grammar.push(item);
+    else data.material.push(item);
+  });
+
+  return data;
+}
+
+function downloadJson(data, filename) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ===================================================================
+// MODAL SYSTEM
+// ===================================================================
+function openModal(title, bodyHtml, footerButtons) {
+  const overlay = document.getElementById('modalOverlay');
+  const container = document.getElementById('modalContainer');
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').innerHTML = bodyHtml;
+
+  container.className = 'modal';
+
+  const footer = document.getElementById('modalFooter');
+  footer.innerHTML = footerButtons.map(btn =>
+    `<button class="btn ${btn.class}" onclick="${btn.action}">${btn.text}</button>`
+  ).join('');
+
+  overlay.classList.add('active');
+  return overlay;
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('active');
+}
+
+// Close modal on overlay click
+document.getElementById('modalOverlay').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeModal();
+});
+
+// ===================================================================
+// CONFIRM DIALOG
+// ===================================================================
+function showConfirm(title, message, callback) {
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmMessage').textContent = message;
+  appState.confirmCallback = callback;
+  document.getElementById('confirmOverlay').classList.add('active');
+}
+
+function closeConfirm() {
+  document.getElementById('confirmOverlay').classList.remove('active');
+  appState.confirmCallback = null;
+}
+
+async function confirmAction() {
+  if (appState.confirmCallback) {
+    await appState.confirmCallback();
+  }
+  closeConfirm();
+}
+
+// ===================================================================
+// TOAST NOTIFICATIONS
+// ===================================================================
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `<span>${icons[type] || 'ℹ️'}</span><span>${escapeHtml(message)}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.style.transition = 'opacity 0.3s';
+    toast.style.opacity = '0';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+// ===================================================================
+// UTILITIES
+// ===================================================================
+function escapeHtml(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function escapeAttr(text) {
+  if (!text) return '';
+  return text.replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// ===================================================================
+// KEYBOARD SHORTCUTS
+// ===================================================================
+document.addEventListener('keydown', (e) => {
+  // Ctrl+F or Cmd+F -> focus search
+  if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+    e.preventDefault();
+    document.getElementById('globalSearch').focus();
+  }
+  // Escape -> close modal/search
+  if (e.key === 'Escape') {
+    closeModal();
+    closeConfirm();
+    document.getElementById('contextMenu').classList.remove('show');
+  }
+});
+
+// ===================================================================
+// INITIALIZATION
+// ===================================================================
+async function initApp() {
+  try {
+    await openDB();
+    await loadAllData();
+    renderCategoryTree();
+    renderContent();
+    updateBreadcrumb();
+    updateStats();
+
+    // Add sample data if empty
+    if (appState.entries.length === 0 && appState.categories.length === 0) {
+      await addSampleData();
+      await loadAllData();
+      renderCategoryTree();
+      renderContent();
+      updateStats();
+    }
+  } catch (e) {
+    console.error('Init error:', e);
+    showToast('初始化失败: ' + e.message, 'error');
+  }
+}
+
+async function addSampleData() {
+  // Create sample categories
+  const cat1Id = generateId();
+  const cat2Id = generateId();
+  const cat3Id = generateId();
+  const cat4Id = generateId();
+  const cat5Id = generateId();
+
+  await dbPut('categories', { id: cat1Id, name: '中华传统文化类', parentId: null, expanded: true, createdAt: Date.now() });
+  await dbPut('categories', { id: cat2Id, name: '武术', parentId: cat1Id, expanded: false, createdAt: Date.now() });
+  await dbPut('categories', { id: cat3Id, name: '科技发展类', parentId: null, expanded: true, createdAt: Date.now() });
+  await dbPut('categories', { id: cat4Id, name: '人工智能', parentId: cat3Id, expanded: false, createdAt: Date.now() });
+  await dbPut('categories', { id: cat5Id, name: '体育运动类', parentId: null, expanded: false, createdAt: Date.now() });
+
+  // Sample vocab entries
+  const e1 = generateId();
+  await dbPut('entries', { id: e1, type: 'vocabulary', word: 'Kung Fu', definition: '功夫；中国武术', examples: ['Kung Fu is a traditional Chinese martial art.', 'He has practiced Kung Fu for ten years.'], note: '也可写作 Gongfu', createdAt: Date.now() });
+  await dbPut('entry_categories', { id: generateId(), entryId: e1, categoryId: cat2Id });
+  await dbPut('entry_categories', { id: generateId(), entryId: e1, categoryId: cat5Id });
+
+  const e2 = generateId();
+  await dbPut('entries', { id: e2, type: 'vocabulary', word: 'Algorithm', definition: '算法', examples: ['Machine learning algorithms can identify patterns in data.'], note: '', createdAt: Date.now() });
+  await dbPut('entry_categories', { id: generateId(), entryId: e2, categoryId: cat4Id });
+
+  const e3 = generateId();
+  await dbPut('entries', { id: e3, type: 'vocabulary', word: 'Artificial Intelligence', definition: '人工智能', examples: ['AI is transforming every industry.'], note: '缩写: AI', createdAt: Date.now() });
+  await dbPut('entry_categories', { id: generateId(), entryId: e3, categoryId: cat4Id });
+
+  const e4 = generateId();
+  await dbPut('entries', { id: e4, type: 'vocabulary', word: 'Calligraphy', definition: '书法', examples: ['Chinese calligraphy is considered a form of art.'], note: '', createdAt: Date.now() });
+  await dbPut('entry_categories', { id: generateId(), entryId: e4, categoryId: cat1Id });
+
+  // Sample grammar entry
+  const e5 = generateId();
+  await dbPut('entries', { id: e5, type: 'grammar', title: '虚拟语气 (Subjunctive Mood)', content: '虚拟语气用于表达假设、愿望、建议等与现实相反或不确定的情况。\n\n1. 与现在事实相反: If I were you, I would study harder.\n2. 与过去事实相反: If I had studied harder, I would have passed the exam.\n3. 与将来事实相反: If I should win the lottery, I would travel the world.\n\n注意: 在虚拟语气中，be动词一律使用were。', createdAt: Date.now() });
+  await dbPut('entry_categories', { id: generateId(), entryId: e5, categoryId: cat3Id });
+
+  // Sample material entry
+  const e6 = generateId();
+  await dbPut('entries', { id: e6, type: 'material', title: 'Important 的高级替换词', content: 'crucial - 至关重要的\nvital - 极其重要的\nessential - 必不可少的\nsignificant - 有重大意义的\nparamount - 最重要的\nindispensable - 不可或缺的\npivotal - 关键性的', createdAt: Date.now() });
+  await dbPut('entry_categories', { id: generateId(), entryId: e6, categoryId: cat3Id });
+}
+
+// Start the app
+initApp();
+</script>
+</body>
 </html>
+
