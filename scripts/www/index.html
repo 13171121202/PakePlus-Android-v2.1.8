@@ -2,10 +2,11 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Language Learning Hub</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
-/* ===== CSS Variables & Reset ===== */
 :root {
   --primary: #6C5CE7;
   --primary-light: #A29BFE;
@@ -35,843 +36,359 @@
   --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
   --sidebar-width: 280px;
 }
-
 * { margin: 0; padding: 0; box-sizing: border-box; }
-
-body {
-  font-family: var(--font);
-  background: var(--bg-main);
-  color: var(--text-primary);
-  overflow: hidden;
-  height: 100vh;
-}
-
-/* ===== Zoom Wrapper ===== */
-#zoomWrapper {
-  width: 100%;
-  height: 100vh;
-  transform-origin: top left;
-  transition: transform 0.2s ease;
-}
-
-/* ===== Scrollbar ===== */
+body { font-family: var(--font); background: var(--bg-main); color: var(--text-primary); overflow: hidden; height: 100vh; }
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--text-light); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
 
-/* ===== Layout ===== */
 .app-container { display: flex; flex-direction: column; height: 100vh; }
 
+/* ===== Top Bar ===== */
 .top-bar {
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-  color: var(--text-white);
-  padding: 0 24px;
-  height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  box-shadow: 0 2px 20px rgba(108, 92, 231, 0.3);
-  z-index: 100;
-  flex-shrink: 0;
-  gap: 12px;
+  color: var(--text-white); padding: 0 20px; height: 56px;
+  display: flex; align-items: center; justify-content: space-between;
+  box-shadow: 0 2px 20px rgba(108,92,231,0.3); z-index: 100; flex-shrink: 0;
 }
-
-.top-bar .logo {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  white-space: nowrap;
-}
-
-.top-bar .logo svg { width: 32px; height: 32px; flex-shrink: 0; }
-
-.search-box {
-  position: relative;
-  width: 400px;
-  max-width: 30vw;
-  flex-shrink: 1;
-}
-
+.top-bar .logo { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; white-space: nowrap; }
+.top-bar .logo-icon { font-size: 24px; }
+.search-box { position: relative; flex: 1; max-width: 400px; margin: 0 16px; }
 .search-box input {
-  width: 100%;
-  padding: 10px 16px 10px 42px;
-  border: 2px solid rgba(255,255,255,0.2);
-  border-radius: 25px;
-  background: rgba(255,255,255,0.15);
-  color: var(--text-white);
-  font-size: 14px;
-  outline: none;
-  transition: var(--transition);
-  backdrop-filter: blur(10px);
+  width: 100%; padding: 9px 14px 9px 38px; border: 2px solid rgba(255,255,255,0.2);
+  border-radius: 25px; background: rgba(255,255,255,0.15); color: var(--text-white);
+  font-size: 14px; outline: none; transition: var(--transition); backdrop-filter: blur(10px);
 }
-
 .search-box input::placeholder { color: rgba(255,255,255,0.6); }
 .search-box input:focus { background: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.4); }
+.search-box .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 14px; }
+.top-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
 
-.search-box .search-icon {
-  position: absolute;
-  left: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: rgba(255,255,255,0.6);
+.sidebar-toggle-btn {
+  width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+  border: none; border-radius: var(--radius-sm); cursor: pointer; background: rgba(255,255,255,0.15);
+  color: white; font-size: 18px; transition: var(--transition); flex-shrink: 0;
 }
+.sidebar-toggle-btn:hover { background: rgba(255,255,255,0.25); }
 
-.top-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; flex-wrap: wrap; }
-
-.main-area { display: flex; flex: 1; overflow: hidden; }
+.main-area { display: flex; flex: 1; overflow: hidden; position: relative; }
 
 /* ===== Sidebar ===== */
 .sidebar {
-  width: var(--sidebar-width);
-  background: var(--bg-sidebar);
-  color: var(--text-white);
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-  border-right: 1px solid rgba(255,255,255,0.05);
-  transition: width 0.3s ease, min-width 0.3s ease, opacity 0.3s ease;
-  position: relative;
-  overflow: hidden;
+  width: var(--sidebar-width); background: var(--bg-sidebar); color: var(--text-white);
+  display: flex; flex-direction: column; flex-shrink: 0;
+  transition: width 0.3s ease, transform 0.3s ease; overflow: hidden; z-index: 50;
 }
+.sidebar.collapsed { width: 0; }
 
-.sidebar.collapsed {
-  width: 0;
-  min-width: 0;
-  opacity: 0;
-  border-right: none;
-  padding: 0;
-}
-
-.sidebar.collapsed * {
-  visibility: hidden;
-}
-
-.sidebar-toggle-btn {
-  position: absolute;
-  top: 50%;
-  right: -16px;
-  transform: translateY(-50%);
-  width: 32px;
-  height: 64px;
-  background: var(--bg-sidebar);
-  border: none;
-  border-radius: 0 8px 8px 0;
-  color: var(--text-white);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  z-index: 50;
-  transition: var(--transition);
-  box-shadow: 2px 0 8px rgba(0,0,0,0.2);
-}
-
-.sidebar-toggle-btn:hover {
-  background: var(--primary);
-}
-
-.sidebar-expand-btn {
-  position: fixed;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 28px;
-  height: 64px;
-  background: var(--bg-sidebar);
-  border: none;
-  border-radius: 0 8px 8px 0;
-  color: var(--text-white);
-  cursor: pointer;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  z-index: 200;
-  transition: var(--transition);
-  box-shadow: 2px 0 8px rgba(0,0,0,0.2);
-}
-
-.sidebar-expand-btn:hover { background: var(--primary); }
-.sidebar-expand-btn.visible { display: flex; }
-
-.notebook-tabs {
-  display: flex;
-  padding: 12px 12px 0;
-  gap: 4px;
-  flex-shrink: 0;
-}
-
+.notebook-tabs { display: flex; padding: 10px 10px 0; gap: 3px; flex-shrink: 0; }
 .notebook-tab {
-  flex: 1;
-  padding: 10px 6px;
-  text-align: center;
-  font-size: 11px;
-  font-weight: 600;
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-  cursor: pointer;
-  transition: var(--transition);
-  background: rgba(255,255,255,0.05);
-  border: none;
-  color: var(--text-light);
-  letter-spacing: 0.3px;
+  flex: 1; padding: 9px 4px; text-align: center; font-size: 11px; font-weight: 600;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0; cursor: pointer;
+  transition: var(--transition); background: rgba(255,255,255,0.05);
+  border: none; color: var(--text-light); letter-spacing: 0.3px; white-space: nowrap;
 }
-
 .notebook-tab:hover { background: rgba(255,255,255,0.1); color: var(--text-white); }
-.notebook-tab.active { background: rgba(108, 92, 231, 0.4); color: var(--text-white); }
-
-.notebook-tab.all-tab.active { background: rgba(108, 92, 231, 0.4); }
-.notebook-tab.vocab-tab.active { background: rgba(0, 206, 201, 0.4); }
-.notebook-tab.grammar-tab.active { background: rgba(253, 121, 168, 0.4); }
-.notebook-tab.material-tab.active { background: rgba(253, 203, 110, 0.5); }
+.notebook-tab.active { color: var(--text-white); }
+.notebook-tab.all-tab.active { background: rgba(108,92,231,0.4); }
+.notebook-tab.vocab-tab.active { background: rgba(0,206,201,0.4); }
+.notebook-tab.grammar-tab.active { background: rgba(253,121,168,0.4); }
+.notebook-tab.material-tab.active { background: rgba(253,203,110,0.5); }
 
 .sidebar-header {
-  padding: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-  flex-shrink: 0;
+  padding: 14px 16px; display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid rgba(255,255,255,0.08); flex-shrink: 0;
 }
-
-.sidebar-header h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-light); }
-
+.sidebar-header h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-light); }
 .sidebar-actions { display: flex; gap: 4px; }
 
-.tree-container {
-  flex: 1;
-  overflow-y: auto;
-  padding: 8px 0;
-}
+.tree-container { flex: 1; overflow-y: auto; padding: 8px 0; }
 
-/* ===== Tree Nodes ===== */
 .tree-node { user-select: none; }
-
 .tree-node-header {
-  display: flex;
-  align-items: center;
-  padding: 6px 12px 6px 8px;
-  cursor: pointer;
-  transition: var(--transition);
-  gap: 4px;
-  min-height: 34px;
+  display: flex; align-items: center; padding: 6px 12px 6px 8px; cursor: pointer;
+  transition: var(--transition); gap: 4px; min-height: 34px;
 }
-
 .tree-node-header:hover { background: var(--bg-sidebar-hover); }
-.tree-node-header.selected { background: rgba(108, 92, 231, 0.3); border-right: 3px solid var(--primary-light); }
-
+.tree-node-header.selected { background: rgba(108,92,231,0.3); border-right: 3px solid var(--primary-light); }
 .tree-toggle {
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: transform 0.2s;
-  color: var(--text-light);
-  font-size: 10px;
+  width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: transform 0.2s; color: var(--text-light); font-size: 10px;
 }
-
 .tree-toggle.expanded { transform: rotate(90deg); }
 .tree-toggle.hidden { visibility: hidden; }
-
-.tree-checkbox {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-  accent-color: var(--primary);
-  cursor: pointer;
-}
-
+.tree-checkbox { width: 16px; height: 16px; flex-shrink: 0; accent-color: var(--primary); cursor: pointer; }
 .tree-icon { flex-shrink: 0; font-size: 14px; margin-right: 4px; }
 .tree-label { font-size: 13px; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tree-count { font-size: 11px; color: var(--text-light); background: rgba(255,255,255,0.1); padding: 1px 6px; border-radius: 10px; flex-shrink: 0; }
-
+.tree-count {
+  font-size: 11px; color: var(--text-light); background: rgba(255,255,255,0.1);
+  padding: 1px 6px; border-radius: 10px; flex-shrink: 0;
+}
 .tree-children { padding-left: 16px; }
 .tree-children.collapsed { display: none; }
-
-.tree-node-actions {
-  display: none;
-  gap: 2px;
-  flex-shrink: 0;
-}
-
+.tree-node-actions { display: none; gap: 2px; flex-shrink: 0; }
 .tree-node-header:hover .tree-node-actions { display: flex; }
 .tree-node-header:hover .tree-count { display: none; }
 
 /* ===== Content Area ===== */
-.content-area {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  background: var(--bg-main);
-  transition: var(--transition);
-}
+.content-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--bg-main); }
 
 .content-toolbar {
-  padding: 16px 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-shrink: 0;
-  background: var(--bg-card);
-  border-bottom: 1px solid var(--border);
-  gap: 12px;
-  flex-wrap: wrap;
+  padding: 12px 20px; display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0; background: var(--bg-card); border-bottom: 1px solid var(--border);
+  gap: 10px; flex-wrap: wrap;
 }
-
 .content-toolbar .breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  color: var(--text-secondary);
-  flex-shrink: 1;
-  overflow: hidden;
+  display: flex; align-items: center; gap: 8px; font-size: 14px;
+  color: var(--text-secondary); flex-shrink: 1; overflow: hidden; min-width: 0;
 }
-
 .breadcrumb span { white-space: nowrap; }
 .breadcrumb .sep { color: var(--text-light); }
 .breadcrumb .current { color: var(--text-primary); font-weight: 600; }
+.toolbar-actions { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; }
 
-.toolbar-actions { display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap; }
+.content-body { flex: 1; overflow-y: auto; padding: 20px; }
 
-.content-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 24px;
+.stat-bar {
+  display: flex; gap: 16px; padding: 10px 20px; background: var(--bg-card);
+  border-bottom: 1px solid var(--border); flex-shrink: 0; flex-wrap: wrap;
 }
+.stat-item { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-secondary); }
+.stat-item .stat-num { font-weight: 700; font-size: 15px; color: var(--text-primary); }
+.stat-item .stat-dot { width: 8px; height: 8px; border-radius: 50%; }
 
 /* ===== Buttons ===== */
 .btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  border: none;
-  border-radius: var(--radius-sm);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--transition);
-  white-space: nowrap;
-  font-family: var(--font);
+  display: inline-flex; align-items: center; gap: 5px; padding: 8px 14px;
+  border: none; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: var(--transition); white-space: nowrap; font-family: var(--font);
 }
-
 .btn-primary { background: var(--primary); color: white; }
 .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(108,92,231,0.4); }
-
 .btn-secondary { background: var(--secondary); color: white; }
 .btn-secondary:hover { background: #00B5B0; transform: translateY(-1px); }
-
 .btn-accent { background: var(--accent); color: white; }
 .btn-accent:hover { opacity: 0.9; transform: translateY(-1px); }
-
 .btn-outline { background: transparent; border: 2px solid var(--border); color: var(--text-secondary); }
 .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
-
 .btn-ghost { background: transparent; color: var(--text-secondary); padding: 6px 8px; }
 .btn-ghost:hover { background: rgba(0,0,0,0.05); color: var(--text-primary); }
-
 .btn-danger { background: var(--danger); color: white; }
 .btn-danger:hover { opacity: 0.9; }
-
 .btn-sm { padding: 5px 10px; font-size: 12px; }
-
-.btn-white-outline { background: transparent; border: 2px solid rgba(255,255,255,0.3); color: white; }
-.btn-white-outline:hover { border-color: rgba(255,255,255,0.6); background: rgba(255,255,255,0.1); }
+.btn-warning { background: var(--warning); color: var(--text-primary); }
+.btn-warning:hover { opacity: 0.9; }
 
 .icon-btn {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: var(--transition);
-  background: transparent;
-  color: var(--text-light);
-  font-size: 14px;
+  width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+  border: none; border-radius: var(--radius-sm); cursor: pointer; transition: var(--transition);
+  background: transparent; color: var(--text-light); font-size: 14px;
 }
-
 .icon-btn:hover { background: rgba(255,255,255,0.1); color: var(--text-white); }
 .icon-btn.light { color: var(--text-secondary); }
 .icon-btn.light:hover { background: rgba(0,0,0,0.05); color: var(--text-primary); }
 
-/* ===== Cards ===== */
+/* ===== Entry Cards ===== */
 .entry-card {
-  background: var(--bg-card);
-  border-radius: var(--radius);
-  padding: 20px;
-  margin-bottom: 12px;
-  box-shadow: var(--shadow);
-  transition: var(--transition);
-  border-left: 4px solid transparent;
-  position: relative;
+  background: var(--bg-card); border-radius: var(--radius); padding: 16px 20px;
+  margin-bottom: 10px; box-shadow: var(--shadow); transition: var(--transition);
+  border-left: 4px solid transparent; position: relative;
 }
-
-.entry-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+.entry-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-1px); }
 .entry-card.vocab-card { border-left-color: var(--secondary); }
 .entry-card.grammar-card { border-left-color: var(--accent); }
 .entry-card.material-card { border-left-color: var(--accent-light); }
-
-.entry-card .card-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-
-.entry-card .card-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
+.entry-card .card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 6px; gap: 8px; }
+.entry-card .card-title { font-size: 17px; font-weight: 700; color: var(--text-primary); word-break: break-word; }
 .entry-card .card-badge {
-  font-size: 11px;
-  padding: 3px 10px;
-  border-radius: 20px;
-  font-weight: 600;
-  letter-spacing: 0.3px;
+  font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 600;
+  letter-spacing: 0.3px; white-space: nowrap; flex-shrink: 0;
 }
-
 .badge-vocab { background: rgba(0,206,201,0.15); color: var(--secondary); }
 .badge-grammar { background: rgba(253,121,168,0.15); color: var(--accent); }
 .badge-material { background: rgba(253,203,110,0.2); color: #E17055; }
-
-.entry-card .card-definition { color: var(--text-secondary); font-size: 14px; margin-bottom: 8px; line-height: 1.6; }
-
-.entry-card .card-examples { margin-bottom: 8px; }
-
+.entry-card .card-definition { color: var(--text-secondary); font-size: 14px; margin-bottom: 6px; line-height: 1.6; word-break: break-word; }
+.entry-card .card-examples { margin-bottom: 6px; }
 .card-example {
-  font-size: 13px;
-  color: var(--text-secondary);
-  padding: 6px 12px;
-  background: var(--bg-main);
-  border-radius: var(--radius-sm);
-  margin-bottom: 4px;
-  border-left: 3px solid var(--primary-light);
-  line-height: 1.5;
+  font-size: 13px; color: var(--text-secondary); padding: 5px 10px; background: var(--bg-main);
+  border-radius: var(--radius-sm); margin-bottom: 4px; border-left: 3px solid var(--primary-light); line-height: 1.5;
 }
-
-.entry-card .card-note {
-  font-size: 12px;
-  color: var(--text-light);
-  font-style: italic;
-  margin-bottom: 8px;
-}
-
-.entry-card .card-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.card-tag {
-  font-size: 11px;
-  padding: 2px 8px;
-  background: rgba(108,92,231,0.1);
-  color: var(--primary);
-  border-radius: 12px;
-}
-
-.card-actions {
-  display: flex;
-  gap: 4px;
-  opacity: 0;
-  transition: var(--transition);
-}
-
+.entry-card .card-note { font-size: 12px; color: var(--text-light); font-style: italic; margin-bottom: 6px; }
+.entry-card .card-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.card-tag { font-size: 11px; padding: 2px 8px; background: rgba(108,92,231,0.1); color: var(--primary); border-radius: 12px; }
+.card-actions { display: flex; gap: 4px; opacity: 0; transition: var(--transition); flex-shrink: 0; }
 .entry-card:hover .card-actions { opacity: 1; }
 
 /* ===== Modal ===== */
 .modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  opacity: 0;
-  visibility: hidden;
-  transition: var(--transition);
-  backdrop-filter: blur(4px);
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;
+  z-index: 1000; opacity: 0; visibility: hidden; transition: var(--transition); backdrop-filter: blur(4px);
 }
-
 .modal-overlay.active { opacity: 1; visibility: visible; }
-
 .modal {
-  background: var(--bg-card);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  width: 90%;
-  max-width: 600px;
-  max-height: 85vh;
-  display: flex;
-  flex-direction: column;
-  transform: scale(0.9) translateY(20px);
-  transition: var(--transition);
+  background: var(--bg-card); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
+  width: 92%; max-width: 600px; max-height: 88vh; display: flex; flex-direction: column;
+  transform: scale(0.9) translateY(20px); transition: var(--transition);
 }
-
 .modal-overlay.active .modal { transform: scale(1) translateY(0); }
-
-.modal.wide { max-width: 900px; }
-.modal.extra-wide { max-width: 1100px; }
-
+.modal.wide { max-width: 800px; }
+.modal.extra-wide { max-width: 1000px; }
 .modal-header {
-  padding: 20px 24px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-shrink: 0;
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
 }
-
-.modal-header h2 { font-size: 18px; font-weight: 700; }
-
-.modal-body {
-  padding: 24px;
-  overflow-y: auto;
-  flex: 1;
-}
-
+.modal-header h2 { font-size: 17px; font-weight: 700; }
+.modal-body { padding: 20px; overflow-y: auto; flex: 1; }
 .modal-footer {
-  padding: 16px 24px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  flex-shrink: 0;
+  padding: 14px 20px; border-top: 1px solid var(--border);
+  display: flex; justify-content: flex-end; gap: 8px; flex-shrink: 0; flex-wrap: wrap;
 }
 
 /* ===== Form ===== */
-.form-group { margin-bottom: 16px; }
-.form-label { display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
+.form-group { margin-bottom: 14px; }
+.form-label { display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 5px; }
 .form-required::after { content: ' *'; color: var(--danger); }
-
 .form-input, .form-textarea, .form-select {
-  width: 100%;
-  padding: 10px 14px;
-  border: 2px solid var(--border);
-  border-radius: var(--radius-sm);
-  font-size: 14px;
-  font-family: var(--font);
-  outline: none;
-  transition: var(--transition);
-  background: var(--bg-main);
+  width: 100%; padding: 9px 12px; border: 2px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 14px; font-family: var(--font); outline: none; transition: var(--transition); background: var(--bg-main);
 }
-
-.form-input:focus, .form-textarea:focus, .form-select:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(108,92,231,0.1); }
-
+.form-input:focus, .form-textarea:focus, .form-select:focus {
+  border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(108,92,231,0.1);
+}
 .form-textarea { resize: vertical; min-height: 80px; }
 
-.example-list { display: flex; flex-direction: column; gap: 8px; }
-.example-item { display: flex; gap: 8px; align-items: center; }
+.example-list { display: flex; flex-direction: column; gap: 6px; }
+.example-item { display: flex; gap: 6px; align-items: center; }
 .example-item input { flex: 1; }
 
 .category-selector {
-  border: 2px solid var(--border);
-  border-radius: var(--radius-sm);
-  max-height: 200px;
-  overflow-y: auto;
-  padding: 8px;
-  background: var(--bg-main);
+  border: 2px solid var(--border); border-radius: var(--radius-sm);
+  max-height: 200px; overflow-y: auto; padding: 8px; background: var(--bg-main);
 }
-
-.category-selector .tree-node-header { padding: 4px 8px; border-radius: 4px; min-height: 28px; color: var(--text-primary); }
+.category-selector .tree-node-header {
+  padding: 4px 8px; border-radius: 4px; min-height: 28px; color: var(--text-primary);
+}
 .category-selector .tree-node-header:hover { background: rgba(108,92,231,0.1); }
 .category-selector .tree-toggle { color: var(--text-secondary); }
 
-/* ===== Search Results ===== */
-.search-tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 2px solid var(--border); }
-
+/* ===== Search ===== */
+.search-tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 2px solid var(--border); overflow-x: auto; }
 .search-tab {
-  padding: 10px 20px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -2px;
-  transition: var(--transition);
-  background: none;
-  border-top: none;
-  border-left: none;
-  border-right: none;
-  font-family: var(--font);
+  padding: 8px 16px; font-size: 13px; font-weight: 600; color: var(--text-secondary);
+  cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px;
+  transition: var(--transition); background: none; border-top: none; border-left: none;
+  border-right: none; font-family: var(--font); white-space: nowrap;
 }
-
 .search-tab:hover { color: var(--primary); }
 .search-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+.search-tab .tab-count { font-size: 11px; background: var(--bg-main); padding: 1px 6px; border-radius: 10px; margin-left: 4px; }
 
-.search-tab .tab-count {
-  font-size: 11px;
-  background: var(--bg-main);
-  padding: 1px 8px;
-  border-radius: 10px;
-  margin-left: 6px;
-}
-
-mark {
-  background: rgba(253,203,110,0.5);
-  color: inherit;
-  padding: 1px 2px;
-  border-radius: 2px;
-}
+mark { background: rgba(253,203,110,0.5); color: inherit; padding: 1px 2px; border-radius: 2px; }
 
 /* ===== Quiz ===== */
-.quiz-setup { display: flex; flex-direction: column; gap: 20px; }
+.quiz-option-group { background: var(--bg-main); border-radius: var(--radius); padding: 14px; margin-bottom: 12px; }
+.quiz-option-group h4 { font-size: 14px; margin-bottom: 10px; color: var(--text-primary); }
+.radio-group, .checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; }
+.radio-item, .checkbox-item { display: flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; }
 
-.quiz-option-group {
-  background: var(--bg-main);
-  border-radius: var(--radius);
-  padding: 16px;
-}
-
-.quiz-option-group h4 { font-size: 14px; margin-bottom: 12px; color: var(--text-primary); }
-
-.radio-group, .checkbox-group { display: flex; flex-wrap: wrap; gap: 12px; }
-
-.radio-item, .checkbox-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.quiz-practice { text-align: center; padding: 40px 20px; }
-
-.quiz-progress { font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; }
-
-.quiz-progress-bar {
-  width: 100%;
-  height: 6px;
-  background: var(--border);
-  border-radius: 3px;
-  margin-bottom: 30px;
-  overflow: hidden;
-}
-
-.quiz-progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--primary), var(--secondary));
-  border-radius: 3px;
-  transition: width 0.4s ease;
-}
-
-.quiz-question { font-size: 28px; font-weight: 700; margin-bottom: 8px; color: var(--text-primary); }
-.quiz-hint { font-size: 14px; color: var(--text-light); margin-bottom: 30px; }
-
+.quiz-practice { text-align: center; padding: 30px 16px; }
+.quiz-progress { font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; }
+.quiz-progress-bar { width: 100%; height: 6px; background: var(--border); border-radius: 3px; margin-bottom: 24px; overflow: hidden; }
+.quiz-progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--secondary)); border-radius: 3px; transition: width 0.4s ease; }
+.quiz-question { font-size: 26px; font-weight: 700; margin-bottom: 6px; color: var(--text-primary); word-break: break-word; }
+.quiz-hint { font-size: 14px; color: var(--text-light); margin-bottom: 24px; }
 .quiz-input {
-  width: 100%;
-  max-width: 400px;
-  padding: 14px 20px;
-  border: 2px solid var(--border);
-  border-radius: var(--radius);
-  font-size: 18px;
-  text-align: center;
-  outline: none;
-  transition: var(--transition);
-  font-family: var(--font);
+  width: 100%; max-width: 400px; padding: 12px 18px; border: 2px solid var(--border);
+  border-radius: var(--radius); font-size: 18px; text-align: center; outline: none;
+  transition: var(--transition); font-family: var(--font);
 }
-
 .quiz-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(108,92,231,0.1); }
-
-.quiz-feedback {
-  margin-top: 20px;
-  padding: 16px;
-  border-radius: var(--radius);
-  font-size: 15px;
-  font-weight: 600;
-}
-
+.quiz-feedback { margin-top: 16px; padding: 14px; border-radius: var(--radius); font-size: 14px; font-weight: 600; }
 .quiz-feedback.correct { background: rgba(0,184,148,0.1); color: var(--success); }
 .quiz-feedback.incorrect { background: rgba(225,112,85,0.1); color: var(--danger); }
 
-.quiz-score { text-align: center; padding: 40px; }
-
+.quiz-score { text-align: center; padding: 30px; }
 .quiz-score .score-circle {
-  width: 140px;
-  height: 140px;
-  border-radius: 50%;
+  width: 120px; height: 120px; border-radius: 50%;
   background: linear-gradient(135deg, var(--primary), var(--secondary));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 24px;
-  color: white;
-  font-size: 36px;
-  font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 20px; color: white; font-size: 32px; font-weight: 800;
   box-shadow: 0 8px 30px rgba(108,92,231,0.3);
 }
 
 /* ===== Exam Paper ===== */
 .exam-paper {
-  background: white;
-  width: 210mm;
-  min-height: 297mm;
-  margin: 0 auto;
-  padding: 20mm;
-  box-shadow: var(--shadow-lg);
-  font-family: 'Times New Roman', serif;
+  background: white; max-width: 210mm; margin: 0 auto; padding: 15mm;
+  box-shadow: var(--shadow-lg); font-family: 'Times New Roman', serif;
 }
+.exam-paper h1 { text-align: center; font-size: 20px; margin-bottom: 6px; border-bottom: 2px solid #333; padding-bottom: 6px; }
+.exam-paper .exam-info { text-align: center; font-size: 12px; color: #666; margin-bottom: 16px; }
+.exam-paper .exam-section { margin-bottom: 16px; }
+.exam-paper .exam-section h3 { font-size: 14px; margin-bottom: 8px; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
+.exam-question { margin-bottom: 12px; font-size: 14px; line-height: 1.8; }
+.exam-question .q-num { font-weight: bold; margin-right: 6px; }
+.exam-blank { display: inline-block; width: 180px; border-bottom: 1px solid #333; margin: 0 4px; }
 
-.exam-paper h1 {
-  text-align: center;
-  margin-bottom: 8px;
-  border-bottom: 2px solid #333;
-  padding-bottom: 8px;
+/* ===== Notes Export Preview ===== */
+.note-export-item {
+  background: white; border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 16px; margin-bottom: 12px; page-break-inside: avoid;
 }
+.note-export-item h3 { font-size: 18px; margin-bottom: 8px; color: var(--primary-dark); border-bottom: 2px solid var(--primary-light); padding-bottom: 4px; }
+.note-export-item .note-type { font-size: 11px; color: white; padding: 2px 8px; border-radius: 10px; display: inline-block; margin-bottom: 8px; }
+.note-export-item .note-def { font-size: 14px; margin-bottom: 6px; color: #333; }
+.note-export-item .note-ex { font-size: 13px; color: #555; padding: 4px 8px; background: #f5f5f5; border-left: 3px solid var(--primary-light); margin-bottom: 4px; }
+.note-export-item .note-note { font-size: 12px; color: #888; font-style: italic; }
+.note-export-item .note-content { font-size: 14px; color: #333; white-space: pre-wrap; line-height: 1.7; }
 
-.exam-paper .exam-info { text-align: center; color: #666; margin-bottom: 20px; }
-
-.exam-paper .exam-section { margin-bottom: 20px; }
-.exam-paper .exam-section h3 { margin-bottom: 10px; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
-
-.exam-question { margin-bottom: 14px; line-height: 1.8; }
-.exam-question .q-num { font-weight: bold; margin-right: 8px; }
-.exam-blank { display: inline-block; width: 200px; border-bottom: 1px solid #333; margin: 0 4px; }
-
-/* ===== Notes PDF Export ===== */
-.pdf-notes-page {
-  background: white;
-  width: 210mm;
-  margin: 0 auto;
-  padding: 20mm;
-  box-shadow: var(--shadow-lg);
-  font-family: 'Segoe UI', system-ui, sans-serif;
-  page-break-after: always;
+/* ===== Import Preview ===== */
+.import-preview { max-height: 400px; overflow-y: auto; }
+.import-preview-section { margin-bottom: 16px; }
+.import-preview-section h4 { font-size: 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.import-preview-item {
+  padding: 8px 12px; background: var(--bg-main); border-radius: var(--radius-sm);
+  margin-bottom: 4px; font-size: 13px; border-left: 3px solid var(--success);
 }
-
-.pdf-notes-page:last-child { page-break-after: auto; }
-
-.pdf-notes-page h1 {
-  text-align: center;
-  color: var(--primary);
-  margin-bottom: 4px;
-  padding-bottom: 8px;
-  border-bottom: 3px solid var(--primary);
-}
-
-.pdf-notes-page .pdf-date { text-align: center; color: #999; margin-bottom: 24px; }
-
-.pdf-section-title {
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-  color: white;
-  padding: 8px 16px;
-  border-radius: 6px;
-  margin: 20px 0 12px;
-  page-break-after: avoid;
-}
-
-.pdf-entry {
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 14px 18px;
-  margin-bottom: 10px;
-  page-break-inside: avoid;
-  background: #fafbfc;
-}
-
-.pdf-entry-word { font-weight: 700; color: #2D3436; margin-bottom: 4px; }
-.pdf-entry-def { color: #555; margin-bottom: 4px; }
-.pdf-entry-example { color: #777; padding-left: 16px; border-left: 3px solid var(--primary-light); margin: 4px 0; }
-.pdf-entry-note { color: #999; font-style: italic; margin-top: 4px; }
-.pdf-entry-title { font-weight: 700; color: #2D3436; margin-bottom: 6px; }
-.pdf-entry-content { color: #555; white-space: pre-wrap; line-height: 1.7; }
-.pdf-entry-cats { color: #aaa; margin-top: 6px; }
+.import-preview-item.existing { border-left-color: var(--warning); }
+.import-stat { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+.import-stat.new { background: rgba(0,184,148,0.15); color: var(--success); }
+.import-stat.update { background: rgba(253,203,110,0.3); color: #E17055; }
 
 /* ===== Toast ===== */
-.toast-container {
-  position: fixed;
-  top: 80px;
-  right: 24px;
-  z-index: 2000;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
+.toast-container { position: fixed; top: 70px; right: 16px; z-index: 2000; display: flex; flex-direction: column; gap: 6px; }
 .toast {
-  background: var(--bg-card);
-  padding: 14px 20px;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-lg);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 14px;
-  animation: slideIn 0.3s ease;
-  max-width: 350px;
+  background: var(--bg-card); padding: 12px 16px; border-radius: var(--radius);
+  box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 8px;
+  font-size: 13px; animation: slideIn 0.3s ease; max-width: 320px;
 }
-
 .toast.success { border-left: 4px solid var(--success); }
 .toast.error { border-left: 4px solid var(--danger); }
 .toast.info { border-left: 4px solid var(--primary); }
+@keyframes slideIn { from { transform: translateX(100px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-@keyframes slideIn {
-  from { transform: translateX(100px); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-}
+.empty-state { text-align: center; padding: 50px 16px; color: var(--text-light); }
+.empty-state .empty-icon { font-size: 56px; margin-bottom: 12px; opacity: 0.5; }
+.empty-state h3 { font-size: 17px; margin-bottom: 6px; color: var(--text-secondary); }
+.empty-state p { font-size: 14px; margin-bottom: 16px; }
 
-/* ===== Empty State ===== */
-.empty-state { text-align: center; padding: 60px 20px; color: var(--text-light); }
-.empty-state .empty-icon { font-size: 64px; margin-bottom: 16px; opacity: 0.5; }
-.empty-state h3 { font-size: 18px; margin-bottom: 8px; color: var(--text-secondary); }
-.empty-state p { font-size: 14px; margin-bottom: 20px; }
-
-/* ===== JSON Template ===== */
 .json-template {
-  background: #2D3436;
-  color: #DFE6E9;
-  padding: 16px;
-  border-radius: var(--radius-sm);
-  font-family: 'Fira Code', 'Consolas', monospace;
-  font-size: 12px;
-  line-height: 1.6;
-  overflow-x: auto;
-  white-space: pre;
-  max-height: 400px;
-  overflow-y: auto;
+  background: #2D3436; color: #DFE6E9; padding: 14px; border-radius: var(--radius-sm);
+  font-family: 'Consolas', monospace; font-size: 11px; line-height: 1.5;
+  overflow-x: auto; white-space: pre; max-height: 300px; overflow-y: auto;
 }
 
 /* ===== Context Menu ===== */
 .context-menu {
-  position: fixed;
-  background: var(--bg-card);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-lg);
-  padding: 6px 0;
-  z-index: 1500;
-  min-width: 160px;
-  display: none;
+  position: fixed; background: var(--bg-card); border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg); padding: 6px 0; z-index: 1500; min-width: 150px; display: none;
 }
-
 .context-menu.show { display: block; }
-
 .context-menu-item {
-  padding: 8px 16px;
-  font-size: 13px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: var(--transition);
+  padding: 8px 14px; font-size: 13px; cursor: pointer; display: flex; align-items: center;
+  gap: 8px; transition: var(--transition);
 }
-
 .context-menu-item:hover { background: rgba(108,92,231,0.1); color: var(--primary); }
 .context-menu-item.danger { color: var(--danger); }
 .context-menu-item.danger:hover { background: rgba(225,112,85,0.1); }
@@ -885,237 +402,159 @@ mark {
   transition: var(--transition);
 }
 .confirm-overlay.active { opacity: 1; visibility: visible; }
-
 .confirm-dialog {
   background: var(--bg-card); border-radius: var(--radius-lg);
-  padding: 28px; max-width: 400px; width: 90%;
-  box-shadow: var(--shadow-lg); text-align: center;
+  padding: 24px; max-width: 380px; width: 90%; box-shadow: var(--shadow-lg); text-align: center;
 }
-
-.confirm-dialog h3 { margin-bottom: 12px; font-size: 18px; }
-.confirm-dialog p { color: var(--text-secondary); margin-bottom: 24px; font-size: 14px; line-height: 1.6; }
+.confirm-dialog h3 { margin-bottom: 10px; font-size: 17px; }
+.confirm-dialog p { color: var(--text-secondary); margin-bottom: 20px; font-size: 14px; line-height: 1.5; }
 .confirm-dialog .confirm-actions { display: flex; gap: 8px; justify-content: center; }
 
-/* ===== Zoom Controls ===== */
-.zoom-controls {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  background: var(--bg-card);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  padding: 12px 16px;
-  z-index: 500;
-  display: none;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  min-width: 180px;
+/* ===== Batch Action Bar ===== */
+.batch-action-bar {
+  position: sticky; bottom: 0; background: white; padding: 12px 16px;
+  border-top: 1px solid var(--border); display: flex; align-items: center;
+  justify-content: space-between; border-radius: var(--radius) var(--radius) 0 0;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.05); gap: 8px; flex-wrap: wrap;
 }
 
-.zoom-controls.visible { display: flex; }
-
-.zoom-controls .zoom-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-secondary);
+/* ===== Font Size Options ===== */
+.font-size-options { display: flex; gap: 6px; flex-wrap: wrap; }
+.font-size-opt {
+  padding: 6px 14px; border: 2px solid var(--border); border-radius: var(--radius-sm);
+  cursor: pointer; font-size: 13px; transition: var(--transition); background: white;
 }
+.font-size-opt:hover { border-color: var(--primary-light); }
+.font-size-opt.active { border-color: var(--primary); background: rgba(108,92,231,0.1); color: var(--primary); font-weight: 600; }
 
-.zoom-controls .zoom-value {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--primary);
-}
-
-.zoom-controls input[type="range"] {
-  width: 100%;
-  accent-color: var(--primary);
-  cursor: pointer;
-}
-
-.zoom-controls .zoom-btns {
-  display: flex;
-  gap: 8px;
-  width: 100%;
-}
-
-.zoom-controls .zoom-btns button {
-  flex: 1;
-  padding: 6px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg-main);
-  cursor: pointer;
-  font-size: 16px;
-  transition: var(--transition);
-}
-
-.zoom-controls .zoom-btns button:hover {
-  background: var(--primary);
-  color: white;
-  border-color: var(--primary);
-}
-
-.zoom-toggle-btn {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: var(--primary);
-  color: white;
-  border: none;
-  cursor: pointer;
-  font-size: 20px;
-  box-shadow: 0 4px 15px rgba(108,92,231,0.4);
-  z-index: 499;
-  transition: var(--transition);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.zoom-toggle-btn:hover { transform: scale(1.1); box-shadow: 0 6px 20px rgba(108,92,231,0.5); }
-.zoom-toggle-btn.hidden { display: none; }
-
-/* ===== Stat bar ===== */
-.stat-bar {
-  display: flex;
-  gap: 20px;
-  padding: 12px 24px;
-  background: var(--bg-card);
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-  flex-wrap: wrap;
-}
-
-.stat-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-
-.stat-item .stat-num { font-weight: 700; font-size: 16px; color: var(--text-primary); }
-.stat-item .stat-dot { width: 8px; height: 8px; border-radius: 50%; }
-
-/* ===== Print Styles ===== */
-@media print {
-  body { overflow: visible !important; }
-  #zoomWrapper { transform: none !important; width: 100% !important; height: auto !important; }
-  .top-bar, .sidebar, .content-toolbar, .stat-bar, .modal-overlay,
-  .modal-footer, .toast-container, .zoom-controls, .zoom-toggle-btn,
-  .sidebar-expand-btn, .no-print { display: none !important; }
-  .content-area { margin: 0; overflow: visible !important; }
-  .content-body { padding: 0; overflow: visible !important; }
-  .app-container { height: auto !important; overflow: visible !important; }
-  .main-area { overflow: visible !important; }
-  .pdf-notes-page, .exam-paper { box-shadow: none; margin: 0; padding: 15mm; }
-  .pdf-notes-page { page-break-after: always; }
-  .pdf-notes-page:last-child { page-break-after: auto; }
-  .pdf-entry { page-break-inside: avoid; }
-}
-
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 .fade-in { animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-.tree-node-header.drag-over {
-  background: rgba(108, 92, 231, 0.2) !important;
-  outline: 2px dashed var(--primary-light);
+/* ===== Mobile Responsive ===== */
+@media (max-width: 768px) {
+  :root { --sidebar-width: 85vw; }
+  
+  .top-bar { padding: 0 12px; height: 52px; }
+  .top-bar .logo { font-size: 15px; gap: 6px; }
+  .top-bar .logo-text { display: none; }
+  .search-box { max-width: none; margin: 0 8px; }
+  .search-box input { padding: 8px 12px 8px 34px; font-size: 13px; }
+  
+  .sidebar {
+    position: fixed; top: 52px; left: 0; bottom: 0; z-index: 200;
+    transform: translateX(-100%); width: var(--sidebar-width);
+    box-shadow: 4px 0 20px rgba(0,0,0,0.3);
+  }
+  .sidebar.mobile-open { transform: translateX(0); }
+  .sidebar.collapsed { transform: translateX(-100%); }
+  
+  .mobile-overlay {
+    position: fixed; top: 52px; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.4); z-index: 199; display: none;
+  }
+  .mobile-overlay.active { display: block; }
+  
+  .content-toolbar { padding: 10px 14px; }
+  .toolbar-actions { gap: 4px; }
+  .btn { padding: 7px 10px; font-size: 12px; }
+  .content-body { padding: 14px; }
+  .stat-bar { padding: 8px 14px; gap: 12px; }
+  
+  .entry-card { padding: 14px 16px; }
+  .entry-card .card-title { font-size: 15px; }
+  .card-actions { opacity: 1; }
+  
+  .modal { width: 96%; max-height: 92vh; }
+  .modal.wide, .modal.extra-wide { max-width: 96%; }
+  .modal-body { padding: 16px; }
+  .modal-header { padding: 14px 16px; }
+  .modal-footer { padding: 12px 16px; }
+  
+  .quiz-question { font-size: 22px; }
+  .quiz-input { font-size: 16px; padding: 10px 14px; }
+  
+  .confirm-dialog { padding: 20px; }
+  
+  /* Mobile bottom nav */
+  .mobile-bottom-nav {
+    display: flex !important;
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--bg-card); border-top: 1px solid var(--border);
+    padding: 6px 0; padding-bottom: max(6px, env(safe-area-inset-bottom));
+    z-index: 90; box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+  }
+  .mobile-nav-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    gap: 2px; padding: 4px; font-size: 10px; color: var(--text-secondary);
+    cursor: pointer; border: none; background: none; font-family: var(--font);
+  }
+  .mobile-nav-item.active { color: var(--primary); }
+  .mobile-nav-item .nav-icon { font-size: 20px; }
+  
+  .content-area { padding-bottom: 60px; }
 }
 
-/* ===== Font Size Selector for PDF ===== */
-.font-size-selector {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+@media (min-width: 769px) {
+  .mobile-bottom-nav { display: none !important; }
+  .mobile-overlay { display: none !important; }
 }
 
-.font-size-option {
-  padding: 8px 16px;
-  border: 2px solid var(--border);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: var(--transition);
-  text-align: center;
-  min-width: 80px;
-  background: var(--bg-main);
-  font-family: var(--font);
-  font-weight: 600;
-}
-
-.font-size-option:hover { border-color: var(--primary); color: var(--primary); }
-.font-size-option.selected { border-color: var(--primary); background: rgba(108,92,231,0.1); color: var(--primary); }
-
-/* ===== PDF Preview Controls ===== */
-.pdf-preview-controls {
-  text-align: center;
-  margin-bottom: 20px;
-  padding: 16px;
-  background: var(--bg-card);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  position: sticky;
-  top: 0;
-  z-index: 10;
+@media print {
+  .top-bar, .sidebar, .content-toolbar, .stat-bar, .modal-footer,
+  .toast-container, .batch-action-bar, .mobile-bottom-nav, .mobile-overlay { display: none !important; }
+  .content-area { margin: 0; }
+  .content-body { padding: 0; }
+  body { overflow: visible; }
 }
 </style>
 </head>
 <body>
 
-<div id="zoomWrapper">
 <div class="app-container" id="app">
-  <!-- Top Bar -->
   <div class="top-bar">
-    <div class="logo">
-      <svg viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="rgba(255,255,255,0.2)"/><text x="16" y="22" text-anchor="middle" fill="white" font-size="18" font-weight="bold">📖</text></svg>
-      <span>Language Learning Hub</span>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="sidebar-toggle-btn" onclick="toggleSidebar()" title="切换侧栏">☰</button>
+      <div class="logo">
+        <span class="logo-icon">📖</span>
+        <span class="logo-text">Learning Hub</span>
+      </div>
     </div>
     <div class="search-box">
       <span class="search-icon">🔍</span>
-      <input type="text" id="globalSearch" placeholder="搜索单词、语法、素材..." autocomplete="off">
+      <input type="text" id="globalSearch" placeholder="搜索..." autocomplete="off">
     </div>
     <div class="top-actions">
-      <button class="btn btn-sm btn-white-outline" onclick="showImportModal()" title="导入数据">📥 导入</button>
-      <button class="btn btn-sm btn-white-outline" onclick="showExportModal()" title="导出数据">📤 导出</button>
-      <button class="btn btn-sm btn-white-outline" onclick="toggleZoomPanel()" title="页面缩放">🔍 缩放</button>
+      <button class="btn btn-sm btn-outline" style="color:white;border-color:rgba(255,255,255,0.3)" onclick="undoLastAction()" title="撤销" id="undoBtn">↩️</button>
+      <button class="btn btn-sm btn-outline" style="color:white;border-color:rgba(255,255,255,0.3)" onclick="showImportModal()" title="导入">📥</button>
+      <button class="btn btn-sm btn-outline" style="color:white;border-color:rgba(255,255,255,0.3)" onclick="showExportModal()" title="导出">📤</button>
     </div>
   </div>
 
   <div class="main-area">
-    <!-- Sidebar -->
+    <div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileSidebar()"></div>
+    
     <div class="sidebar" id="sidebar">
       <div class="notebook-tabs">
-        <div class="notebook-tab all-tab active" onclick="switchNotebook('all')">📚 全部</div>
-        <div class="notebook-tab vocab-tab" onclick="switchNotebook('vocabulary')">📝 生词</div>
-        <div class="notebook-tab grammar-tab" onclick="switchNotebook('grammar')">📐 语法</div>
-        <div class="notebook-tab material-tab" onclick="switchNotebook('material')">✨ 素材</div>
+        <div class="notebook-tab all-tab active" onclick="switchNotebook('all')">📚全部</div>
+        <div class="notebook-tab vocab-tab" onclick="switchNotebook('vocabulary')">📝生词</div>
+        <div class="notebook-tab grammar-tab" onclick="switchNotebook('grammar')">📐语法</div>
+        <div class="notebook-tab material-tab" onclick="switchNotebook('material')">✨素材</div>
       </div>
       <div class="sidebar-header">
         <h3>分类管理</h3>
         <div class="sidebar-actions">
           <button class="icon-btn" onclick="createCategory(null)" title="新建根分类">➕</button>
-          <button class="icon-btn" onclick="toggleSidebar()" title="收起侧栏">◀</button>
         </div>
       </div>
       <div class="tree-container" id="categoryTree"></div>
     </div>
 
-    <!-- Sidebar expand button (shows when sidebar is hidden) -->
-    <button class="sidebar-expand-btn" id="sidebarExpandBtn" onclick="toggleSidebar()">▶</button>
-
-    <!-- Content -->
     <div class="content-area">
       <div class="content-toolbar">
-        <div class="breadcrumb" id="breadcrumb">
-          <span class="current">全部内容</span>
-        </div>
+        <div class="breadcrumb" id="breadcrumb"><span class="current">全部内容</span></div>
         <div class="toolbar-actions">
           <button class="btn btn-primary" onclick="showAddEntryModal()">➕ 新增</button>
           <button class="btn btn-secondary" onclick="showQuizSetup()" id="quizBtn">📝 测验</button>
-          <button class="btn btn-accent" onclick="showPdfExportModal()" id="pdfExportBtn">📄 导出PDF</button>
           <button class="btn btn-outline" onclick="toggleSelectMode()" id="selectModeBtn">☑️ 选择</button>
         </div>
       </div>
@@ -1128,19 +567,24 @@ mark {
         <div class="empty-state">
           <div class="empty-icon">📚</div>
           <h3>开始你的学习之旅</h3>
-          <p>点击「新增」按钮添加你的第一个学习条目</p>
-          <button class="btn btn-primary" onclick="showAddEntryModal()">➕ 新增条目</button>
+          <p>点击「新增」按钮添加学习条目</p>
         </div>
       </div>
     </div>
   </div>
 </div>
+
+<!-- Mobile Bottom Nav -->
+<div class="mobile-bottom-nav" id="mobileBottomNav">
+  <button class="mobile-nav-item active" onclick="mobileNavAction('home')"><span class="nav-icon">🏠</span>首页</button>
+  <button class="mobile-nav-item" onclick="mobileNavAction('add')"><span class="nav-icon">➕</span>新增</button>
+  <button class="mobile-nav-item" onclick="mobileNavAction('quiz')"><span class="nav-icon">📝</span>测验</button>
+  <button class="mobile-nav-item" onclick="mobileNavAction('category')"><span class="nav-icon">📁</span>分类</button>
+  <button class="mobile-nav-item" onclick="mobileNavAction('more')"><span class="nav-icon">⚙️</span>更多</button>
 </div>
 
-<!-- Toast Container -->
 <div class="toast-container" id="toastContainer"></div>
 
-<!-- Context Menu -->
 <div class="context-menu" id="contextMenu">
   <div class="context-menu-item" onclick="contextAction('addSub')">📁 添加子分类</div>
   <div class="context-menu-item" onclick="contextAction('rename')">✏️ 重命名</div>
@@ -1149,7 +593,6 @@ mark {
   <div class="context-menu-item danger" onclick="contextAction('delete')">🗑️ 删除分类</div>
 </div>
 
-<!-- Confirm Dialog -->
 <div class="confirm-overlay" id="confirmOverlay">
   <div class="confirm-dialog">
     <h3 id="confirmTitle">确认操作</h3>
@@ -1161,328 +604,326 @@ mark {
   </div>
 </div>
 
-<!-- Modal Container -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal" id="modalContainer">
     <div class="modal-header">
       <h2 id="modalTitle">弹窗</h2>
-      <button class="icon-btn light" onclick="closeModal()">✖️</button>
+      <button class="icon-btn light" onclick="closeModal()" style="font-size:18px;">✕</button>
     </div>
     <div class="modal-body" id="modalBody"></div>
     <div class="modal-footer" id="modalFooter"></div>
   </div>
 </div>
 
-<!-- Zoom Controls Panel -->
-<div class="zoom-controls" id="zoomControls">
-  <div class="zoom-label">页面缩放</div>
-  <div class="zoom-value" id="zoomValue">100%</div>
-  <input type="range" id="zoomSlider" min="50" max="200" value="100" step="5" oninput="setZoom(this.value)">
-  <div class="zoom-btns">
-    <button onclick="adjustZoom(-10)">➖</button>
-    <button onclick="setZoom(100)">重置</button>
-    <button onclick="adjustZoom(10)">➕</button>
-  </div>
-</div>
-
-<!-- Zoom Toggle Button -->
-<button class="zoom-toggle-btn" id="zoomToggleBtn" onclick="toggleZoomPanel()" title="页面缩放">🔍</button>
+<!-- Hidden container for PDF rendering -->
+<div id="pdfRenderContainer" style="position:fixed;left:-9999px;top:0;z-index:-1;"></div>
 
 <script>
-// ===================================================================
-// DATA LAYER - IndexedDB
-// ===================================================================
+// =====================================================================
+// DATABASE LAYER
+// =====================================================================
 const DB_NAME = 'LanguageLearningHub';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 let db = null;
 
 function openDB() {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => { db = request.result; resolve(db); };
-    request.onupgradeneeded = (e) => {
-      const database = e.target.result;
-      if (!database.objectStoreNames.contains('categories')) {
-        const catStore = database.createObjectStore('categories', { keyPath: 'id' });
-        catStore.createIndex('parentId', 'parentId', { unique: false });
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onerror = () => reject(req.error);
+    req.onsuccess = () => { db = req.result; resolve(db); };
+    req.onupgradeneeded = (e) => {
+      const d = e.target.result;
+      if (!d.objectStoreNames.contains('categories')) {
+        const s = d.createObjectStore('categories', { keyPath: 'id' });
+        s.createIndex('parentId', 'parentId', { unique: false });
       }
-      if (!database.objectStoreNames.contains('entries')) {
-        const entryStore = database.createObjectStore('entries', { keyPath: 'id' });
-        entryStore.createIndex('type', 'type', { unique: false });
+      if (!d.objectStoreNames.contains('entries')) {
+        const s = d.createObjectStore('entries', { keyPath: 'id' });
+        s.createIndex('type', 'type', { unique: false });
       }
-      if (!database.objectStoreNames.contains('entry_categories')) {
-        const ecStore = database.createObjectStore('entry_categories', { keyPath: 'id' });
-        ecStore.createIndex('entryId', 'entryId', { unique: false });
-        ecStore.createIndex('categoryId', 'categoryId', { unique: false });
+      if (!d.objectStoreNames.contains('entry_categories')) {
+        const s = d.createObjectStore('entry_categories', { keyPath: 'id' });
+        s.createIndex('entryId', 'entryId', { unique: false });
+        s.createIndex('categoryId', 'categoryId', { unique: false });
       }
     };
   });
 }
 
-function generateId() { return Date.now().toString(36) + Math.random().toString(36).substr(2, 9); }
+const genId = () => Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
 
-function dbTransaction(storeNames, mode) { return db.transaction(storeNames, mode); }
-
-function dbGetAll(storeName) {
-  return new Promise((resolve, reject) => {
-    const req = dbTransaction([storeName], 'readonly').objectStore(storeName).getAll();
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
+function dbGetAll(store) {
+  return new Promise((res, rej) => {
+    const r = db.transaction([store], 'readonly').objectStore(store).getAll();
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
   });
 }
 
-function dbPut(storeName, data) {
-  return new Promise((resolve, reject) => {
-    const req = dbTransaction([storeName], 'readwrite').objectStore(storeName).put(data);
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
+function dbPut(store, data) {
+  return new Promise((res, rej) => {
+    const r = db.transaction([store], 'readwrite').objectStore(store).put(data);
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
   });
 }
 
-function dbDelete(storeName, id) {
-  return new Promise((resolve, reject) => {
-    const req = dbTransaction([storeName], 'readwrite').objectStore(storeName).delete(id);
-    req.onsuccess = () => resolve();
-    req.onerror = () => reject(req.error);
+function dbDelete(store, id) {
+  return new Promise((res, rej) => {
+    const r = db.transaction([store], 'readwrite').objectStore(store).delete(id);
+    r.onsuccess = () => res(); r.onerror = () => rej(r.error);
   });
 }
 
-// ===================================================================
-// APPLICATION STATE
-// ===================================================================
-let appState = {
+// =====================================================================
+// APP STATE
+// =====================================================================
+let S = {
   currentNotebook: 'all',
   selectedCategoryId: null,
   selectMode: false,
   selectedEntries: new Set(),
   contextMenuCategoryId: null,
   confirmCallback: null,
+  sidebarCollapsed: false,
   categories: [],
   entries: [],
   entryCategories: [],
-  sidebarCollapsed: false,
-  zoomLevel: 100,
 };
 
-// ===================================================================
-// DATA OPERATIONS
-// ===================================================================
-async function loadAllData() {
-  appState.categories = await dbGetAll('categories');
-  appState.entries = await dbGetAll('entries');
-  appState.entryCategories = await dbGetAll('entry_categories');
+// =====================================================================
+// UNDO SYSTEM
+// =====================================================================
+let undoStack = []; // Each item: { snapshot: {categories, entries, entryCategories} }
+const MAX_UNDO = 10;
+
+async function saveSnapshot() {
+  const snapshot = {
+    categories: JSON.parse(JSON.stringify(S.categories)),
+    entries: JSON.parse(JSON.stringify(S.entries)),
+    entryCategories: JSON.parse(JSON.stringify(S.entryCategories)),
+  };
+  undoStack.push(snapshot);
+  if (undoStack.length > MAX_UNDO) undoStack.shift();
+  updateUndoBtn();
 }
 
-async function saveCategory(cat) { await dbPut('categories', cat); await loadAllData(); }
+function updateUndoBtn() {
+  const btn = document.getElementById('undoBtn');
+  if (btn) {
+    btn.style.opacity = undoStack.length > 0 ? '1' : '0.4';
+    btn.title = undoStack.length > 0 ? `撤销 (${undoStack.length}步可撤销)` : '无可撤销操作';
+  }
+}
+
+function undoLastAction() {
+  if (undoStack.length === 0) { showToast('没有可撤销的操作', 'info'); return; }
+  showConfirm('撤销操作', `确定要撤销上一步操作吗？(还有 ${undoStack.length} 步可撤销)`, async () => {
+    const snapshot = undoStack.pop();
+    // Clear all stores and restore
+    const clearStore = (store) => new Promise((res, rej) => {
+      const tx = db.transaction([store], 'readwrite');
+      const s = tx.objectStore(store);
+      const r = s.clear();
+      r.onsuccess = () => res(); r.onerror = () => rej(r.error);
+    });
+
+    await clearStore('categories');
+    await clearStore('entries');
+    await clearStore('entry_categories');
+
+    for (const c of snapshot.categories) await dbPut('categories', c);
+    for (const e of snapshot.entries) await dbPut('entries', e);
+    for (const ec of snapshot.entryCategories) await dbPut('entry_categories', ec);
+
+    await loadAllData();
+    renderAll();
+    updateUndoBtn();
+    showToast('已撤销上一步操作', 'success');
+  });
+}
+
+// =====================================================================
+// DATA OPERATIONS
+// =====================================================================
+async function loadAllData() {
+  S.categories = await dbGetAll('categories');
+  S.entries = await dbGetAll('entries');
+  S.entryCategories = await dbGetAll('entry_categories');
+}
+
+async function saveCategory(cat) { await dbPut('categories', cat); }
 
 async function deleteCategoryRecursive(catId) {
-  const children = appState.categories.filter(c => c.parentId === catId);
-  for (const child of children) await deleteCategoryRecursive(child.id);
-  const refs = appState.entryCategories.filter(ec => ec.categoryId === catId);
+  const children = S.categories.filter(c => c.parentId === catId);
+  for (const ch of children) await deleteCategoryRecursive(ch.id);
+  const refs = S.entryCategories.filter(ec => ec.categoryId === catId);
   for (const ref of refs) await dbDelete('entry_categories', ref.id);
   await dbDelete('categories', catId);
 }
 
 async function saveEntry(entry) { await dbPut('entries', entry); }
 
-async function deleteEntry(entryId) {
-  const refs = appState.entryCategories.filter(ec => ec.entryId === entryId);
+async function deleteEntryFull(entryId) {
+  const refs = S.entryCategories.filter(ec => ec.entryId === entryId);
   for (const ref of refs) await dbDelete('entry_categories', ref.id);
   await dbDelete('entries', entryId);
 }
 
 async function setEntryCategories(entryId, categoryIds) {
-  const existing = appState.entryCategories.filter(ec => ec.entryId === entryId);
+  const existing = S.entryCategories.filter(ec => ec.entryId === entryId);
   for (const ec of existing) await dbDelete('entry_categories', ec.id);
-  for (const catId of categoryIds) await dbPut('entry_categories', { id: generateId(), entryId, categoryId: catId });
+  for (const catId of categoryIds) await dbPut('entry_categories', { id: genId(), entryId, categoryId: catId });
 }
 
 function getCategoryPath(catId) {
   const parts = [];
-  let current = appState.categories.find(c => c.id === catId);
-  while (current) { parts.unshift(current.name); current = appState.categories.find(c => c.id === current.parentId); }
+  let cur = S.categories.find(c => c.id === catId);
+  while (cur) { parts.unshift(cur.name); cur = S.categories.find(c => c.id === cur.parentId); }
   return parts.join(' / ');
 }
 
-function getEntryCategoryIds(entryId) { return appState.entryCategories.filter(ec => ec.entryId === entryId).map(ec => ec.categoryId); }
+function getEntryCatIds(entryId) { return S.entryCategories.filter(ec => ec.entryId === entryId).map(ec => ec.categoryId); }
 
-function getCategoryEntries(catId, includeChildren = true) {
-  const catIds = [catId];
-  if (includeChildren) {
-    const addChildren = (pid) => {
-      appState.categories.filter(c => c.parentId === pid).forEach(child => { catIds.push(child.id); addChildren(child.id); });
-    };
-    addChildren(catId);
-  }
-  const entryIds = new Set(appState.entryCategories.filter(ec => catIds.includes(ec.categoryId)).map(ec => ec.entryId));
-  return appState.entries.filter(e => entryIds.has(e.id));
+function getCategoryEntries(catId) {
+  const ids = [catId];
+  const addChildren = pid => { S.categories.filter(c => c.parentId === pid).forEach(c => { ids.push(c.id); addChildren(c.id); }); };
+  addChildren(catId);
+  const entryIds = new Set(S.entryCategories.filter(ec => ids.includes(ec.categoryId)).map(ec => ec.entryId));
+  return S.entries.filter(e => entryIds.has(e.id));
 }
 
 function getFilteredEntries() {
-  let entries = appState.selectedCategoryId ? getCategoryEntries(appState.selectedCategoryId) : [...appState.entries];
-  if (appState.currentNotebook !== 'all') entries = entries.filter(e => e.type === appState.currentNotebook);
+  let entries = S.selectedCategoryId ? getCategoryEntries(S.selectedCategoryId) : [...S.entries];
+  if (S.currentNotebook !== 'all') entries = entries.filter(e => e.type === S.currentNotebook);
   return entries;
 }
 
 function getCategoryCount(catId) { return getCategoryEntries(catId).length; }
-function getRootCategories() { return appState.categories.filter(c => !c.parentId); }
-function getChildCategories(parentId) { return appState.categories.filter(c => c.parentId === parentId); }
+function getRootCategories() { return S.categories.filter(c => !c.parentId); }
+function getChildCategories(pid) { return S.categories.filter(c => c.parentId === pid); }
 
-// ===================================================================
+// =====================================================================
 // SIDEBAR TOGGLE
-// ===================================================================
+// =====================================================================
 function toggleSidebar() {
-  appState.sidebarCollapsed = !appState.sidebarCollapsed;
   const sidebar = document.getElementById('sidebar');
-  const expandBtn = document.getElementById('sidebarExpandBtn');
+  const isMobile = window.innerWidth <= 768;
 
-  if (appState.sidebarCollapsed) {
-    sidebar.classList.add('collapsed');
-    expandBtn.classList.add('visible');
+  if (isMobile) {
+    sidebar.classList.toggle('mobile-open');
+    document.getElementById('mobileOverlay').classList.toggle('active', sidebar.classList.contains('mobile-open'));
   } else {
-    sidebar.classList.remove('collapsed');
-    expandBtn.classList.remove('visible');
-  }
-
-  try { localStorage.setItem('llh_sidebar_collapsed', appState.sidebarCollapsed); } catch(e) {}
-}
-
-function restoreSidebarState() {
-  try {
-    const saved = localStorage.getItem('llh_sidebar_collapsed');
-    if (saved === 'true') {
-      appState.sidebarCollapsed = true;
-      document.getElementById('sidebar').classList.add('collapsed');
-      document.getElementById('sidebarExpandBtn').classList.add('visible');
-    }
-  } catch(e) {}
-}
-
-// ===================================================================
-// ZOOM CONTROLS
-// ===================================================================
-let zoomPanelVisible = false;
-
-function toggleZoomPanel() {
-  zoomPanelVisible = !zoomPanelVisible;
-  const panel = document.getElementById('zoomControls');
-  const btn = document.getElementById('zoomToggleBtn');
-  if (zoomPanelVisible) {
-    panel.classList.add('visible');
-    btn.classList.add('hidden');
-  } else {
-    panel.classList.remove('visible');
-    btn.classList.remove('hidden');
+    S.sidebarCollapsed = !S.sidebarCollapsed;
+    sidebar.classList.toggle('collapsed', S.sidebarCollapsed);
   }
 }
 
-function setZoom(value) {
-  value = Math.max(50, Math.min(200, parseInt(value)));
-  appState.zoomLevel = value;
-  const wrapper = document.getElementById('zoomWrapper');
-  const scale = value / 100;
-  wrapper.style.transform = `scale(${scale})`;
-  wrapper.style.width = `${100 / scale}%`;
-  wrapper.style.height = `${100 / scale}vh`;
-  document.getElementById('zoomSlider').value = value;
-  document.getElementById('zoomValue').textContent = value + '%';
-  try { localStorage.setItem('llh_zoom', value); } catch(e) {}
+function closeMobileSidebar() {
+  document.getElementById('sidebar').classList.remove('mobile-open');
+  document.getElementById('mobileOverlay').classList.remove('active');
 }
 
-function adjustZoom(delta) {
-  setZoom(appState.zoomLevel + delta);
+// =====================================================================
+// MOBILE NAV
+// =====================================================================
+function mobileNavAction(action) {
+  document.querySelectorAll('.mobile-nav-item').forEach(n => n.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+
+  if (action === 'home') { S.selectedCategoryId = null; renderAll(); }
+  else if (action === 'add') showAddEntryModal();
+  else if (action === 'quiz') showQuizSetup();
+  else if (action === 'category') toggleSidebar();
+  else if (action === 'more') showMoreMenu();
 }
 
-function restoreZoom() {
-  try {
-    const saved = localStorage.getItem('llh_zoom');
-    if (saved) setZoom(parseInt(saved));
-  } catch(e) {}
+function showMoreMenu() {
+  openModal('更多操作', `
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button class="btn btn-primary" onclick="closeModal();showImportModal()" style="width:100%;justify-content:center;">📥 导入数据</button>
+      <button class="btn btn-secondary" onclick="closeModal();showExportModal()" style="width:100%;justify-content:center;">📤 导出数据</button>
+      <button class="btn btn-outline" onclick="closeModal();toggleSelectMode()" style="width:100%;justify-content:center;">☑️ 批量选择</button>
+      <button class="btn btn-warning" onclick="closeModal();undoLastAction()" style="width:100%;justify-content:center;">↩️ 撤销操作</button>
+    </div>
+  `, [{ text: '关闭', class: 'btn-outline', action: 'closeModal()' }]);
 }
 
-// Close zoom panel when clicking outside
-document.addEventListener('click', (e) => {
-  const panel = document.getElementById('zoomControls');
-  const btn = document.getElementById('zoomToggleBtn');
-  if (zoomPanelVisible && !panel.contains(e.target) && !btn.contains(e.target) && !e.target.closest('.top-actions')) {
-    zoomPanelVisible = false;
-    panel.classList.remove('visible');
-    btn.classList.remove('hidden');
-  }
-});
-
-// ===================================================================
-// UI RENDERING
-// ===================================================================
-function switchNotebook(notebook) {
-  appState.currentNotebook = notebook;
-  appState.selectedCategoryId = null;
-  document.querySelectorAll('.notebook-tab').forEach(t => t.classList.remove('active'));
-  const tabs = document.querySelectorAll('.notebook-tab');
-  const index = ['all', 'vocabulary', 'grammar', 'material'].indexOf(notebook);
-  if (index >= 0) tabs[index].classList.add('active');
-  document.getElementById('quizBtn').style.display = (notebook === 'vocabulary' || notebook === 'all') ? '' : 'none';
+// =====================================================================
+// RENDERING
+// =====================================================================
+function renderAll() {
   renderCategoryTree();
   renderContent();
   updateBreadcrumb();
   updateStats();
+}
+
+function switchNotebook(nb) {
+  S.currentNotebook = nb;
+  S.selectedCategoryId = null;
+  document.querySelectorAll('.notebook-tab').forEach(t => t.classList.remove('active'));
+  const idx = ['all', 'vocabulary', 'grammar', 'material'].indexOf(nb);
+  document.querySelectorAll('.notebook-tab')[idx]?.classList.add('active');
+  document.getElementById('quizBtn').style.display = (nb === 'vocabulary' || nb === 'all') ? '' : 'none';
+  renderAll();
+  if (window.innerWidth <= 768) closeMobileSidebar();
 }
 
 function renderCategoryTree() {
   const container = document.getElementById('categoryTree');
   const roots = getRootCategories();
   if (roots.length === 0) {
-    container.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text-light);font-size:13px;">
-      <p style="margin-bottom:12px;">暂无分类</p>
+    container.innerHTML = `<div style="padding:16px;text-align:center;color:var(--text-light);font-size:13px;">
+      <p style="margin-bottom:10px;">暂无分类</p>
       <button class="btn btn-sm btn-primary" onclick="createCategory(null)">➕ 创建分类</button></div>`;
     return;
   }
   container.innerHTML = renderTreeNodes(roots);
 }
 
-function renderTreeNodes(categories) {
-  return categories.map(cat => {
+function renderTreeNodes(cats) {
+  return cats.map(cat => {
     const children = getChildCategories(cat.id);
     const hasChildren = children.length > 0;
     const count = getCategoryCount(cat.id);
-    const isSelected = appState.selectedCategoryId === cat.id;
+    const isSel = S.selectedCategoryId === cat.id;
     return `<div class="tree-node" data-id="${cat.id}">
-      <div class="tree-node-header ${isSelected ? 'selected' : ''}" onclick="selectCategory('${cat.id}')" oncontextmenu="showContextMenu(event,'${cat.id}')">
-        <span class="tree-toggle ${hasChildren ? '' : 'hidden'} ${cat.expanded ? 'expanded' : ''}" onclick="event.stopPropagation();toggleTreeNode('${cat.id}')">▶</span>
+      <div class="tree-node-header ${isSel ? 'selected' : ''}"
+           onclick="selectCategory('${cat.id}')"
+           oncontextmenu="showContextMenu(event,'${cat.id}')">
+        <span class="tree-toggle ${hasChildren ? '' : 'hidden'} ${cat.expanded ? 'expanded' : ''}"
+              onclick="event.stopPropagation();toggleTreeNode('${cat.id}')">▶</span>
         <span class="tree-icon">${hasChildren ? '📁' : '📄'}</span>
-        <span class="tree-label">${escapeHtml(cat.name)}</span>
+        <span class="tree-label">${escHtml(cat.name)}</span>
         <span class="tree-count">${count}</span>
         <div class="tree-node-actions">
-          <button class="icon-btn" onclick="event.stopPropagation();createCategory('${cat.id}')" title="添加子分类" style="width:24px;height:24px;font-size:12px;">➕</button>
-          <button class="icon-btn" onclick="event.stopPropagation();showContextMenu(event,'${cat.id}')" title="更多" style="width:24px;height:24px;font-size:12px;">⋮</button>
+          <button class="icon-btn" onclick="event.stopPropagation();createCategory('${cat.id}')" title="添加子分类" style="width:22px;height:22px;font-size:11px;">➕</button>
+          <button class="icon-btn" onclick="event.stopPropagation();showContextMenu(event,'${cat.id}')" title="更多" style="width:22px;height:22px;font-size:11px;">⋮</button>
         </div>
       </div>
-      ${hasChildren ? `<div class="tree-children ${cat.expanded ? '' : 'collapsed'}">${renderTreeNodes(children)}</div>` : ''}</div>`;
+      ${hasChildren ? `<div class="tree-children ${cat.expanded ? '' : 'collapsed'}">${renderTreeNodes(children)}</div>` : ''}
+    </div>`;
   }).join('');
 }
 
 async function toggleTreeNode(catId) {
-  const cat = appState.categories.find(c => c.id === catId);
-  if (cat) { cat.expanded = !cat.expanded; await saveCategory(cat); renderCategoryTree(); }
+  const cat = S.categories.find(c => c.id === catId);
+  if (cat) { cat.expanded = !cat.expanded; await saveCategory(cat); await loadAllData(); renderCategoryTree(); }
 }
 
 function selectCategory(catId) {
-  appState.selectedCategoryId = appState.selectedCategoryId === catId ? null : catId;
-  renderCategoryTree();
-  renderContent();
-  updateBreadcrumb();
-  updateStats();
+  S.selectedCategoryId = S.selectedCategoryId === catId ? null : catId;
+  renderAll();
+  if (window.innerWidth <= 768) closeMobileSidebar();
 }
 
 function updateBreadcrumb() {
   const bc = document.getElementById('breadcrumb');
   const names = { all: '全部内容', vocabulary: '生词本', grammar: '语法本', material: '素材本' };
-  let parts = [`<span>${names[appState.currentNotebook]}</span>`];
-  if (appState.selectedCategoryId) {
-    getCategoryPath(appState.selectedCategoryId).split(' / ').forEach((seg, i, arr) => {
+  let parts = [`<span>${names[S.currentNotebook]}</span>`];
+  if (S.selectedCategoryId) {
+    getCategoryPath(S.selectedCategoryId).split(' / ').forEach((seg, i, arr) => {
       parts.push(`<span class="sep">›</span>`);
-      parts.push(`<span class="${i === arr.length - 1 ? 'current' : ''}">${escapeHtml(seg)}</span>`);
+      parts.push(`<span class="${i === arr.length - 1 ? 'current' : ''}">${escHtml(seg)}</span>`);
     });
   }
   bc.innerHTML = parts.join('');
@@ -1498,50 +939,59 @@ function updateStats() {
 function renderContent() {
   const body = document.getElementById('contentBody');
   const entries = getFilteredEntries();
+
   if (entries.length === 0) {
-    body.innerHTML = `<div class="empty-state"><div class="empty-icon">📝</div><h3>这里还没有内容</h3>
-      <p>点击「新增」按钮添加学习条目，或者导入已有数据。</p>
-      <button class="btn btn-primary" onclick="showAddEntryModal()">➕ 新增条目</button></div>`;
+    body.innerHTML = `<div class="empty-state"><div class="empty-icon">📝</div>
+      <h3>这里还没有内容</h3><p>点击「新增」按钮添加学习条目</p>
+      <button class="btn btn-primary" onclick="showAddEntryModal()">➕ 新增</button></div>`;
     return;
   }
-  const selectClass = appState.selectMode ? 'show-checkboxes' : '';
-  body.innerHTML = `<div class="${selectClass}">${entries.map(e => renderEntryCard(e)).join('')}</div>`;
-  if (appState.selectMode) {
-    body.innerHTML += `<div class="no-print" style="position:sticky;bottom:0;background:white;padding:16px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;border-radius:var(--radius) var(--radius) 0 0;box-shadow:0 -2px 10px rgba(0,0,0,0.05);">
-      <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;"><input type="checkbox" onchange="toggleSelectAll(this.checked)"> 全选</label>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-        <span style="font-size:13px;color:var(--text-secondary);line-height:32px;">已选 <strong id="selectedCount">${appState.selectedEntries.size}</strong> 项</span>
+
+  let html = entries.map(e => renderEntryCard(e)).join('');
+
+  if (S.selectMode) {
+    html += `<div class="batch-action-bar">
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+        <input type="checkbox" onchange="toggleSelectAll(this.checked)"> 全选
+      </label>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+        <span style="font-size:12px;color:var(--text-secondary);">已选 <strong id="selectedCount">${S.selectedEntries.size}</strong> 项</span>
+        <button class="btn btn-sm btn-outline" onclick="batchMove()">📦 移动</button>
+        <button class="btn btn-sm btn-secondary" onclick="exportSelectedPDF()">📄 导出PDF</button>
         <button class="btn btn-sm btn-outline" onclick="exportSelected()">📤 导出JSON</button>
-        <button class="btn btn-sm btn-accent" onclick="exportSelectedAsPdf()">📄 导出PDF</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteSelected()">🗑️ 删除选中</button>
-      </div></div>`;
+        <button class="btn btn-sm btn-danger" onclick="deleteSelected()">🗑️ 删除</button>
+      </div>
+    </div>`;
   }
+
+  body.innerHTML = html;
 }
 
 function renderEntryCard(entry) {
-  const catIds = getEntryCategoryIds(entry.id);
-  const catNames = catIds.map(id => { const c = appState.categories.find(cc => cc.id === id); return c ? c.name : ''; }).filter(Boolean);
+  const catIds = getEntryCatIds(entry.id);
+  const catNames = catIds.map(id => { const c = S.categories.find(x => x.id === id); return c ? c.name : ''; }).filter(Boolean);
   const typeClass = entry.type === 'vocabulary' ? 'vocab-card' : entry.type === 'grammar' ? 'grammar-card' : 'material-card';
   const badgeClass = entry.type === 'vocabulary' ? 'badge-vocab' : entry.type === 'grammar' ? 'badge-grammar' : 'badge-material';
   const typeName = entry.type === 'vocabulary' ? '生词' : entry.type === 'grammar' ? '语法' : '素材';
-  const checked = appState.selectedEntries.has(entry.id) ? 'checked' : '';
+  const checked = S.selectedEntries.has(entry.id) ? 'checked' : '';
 
   let content = '';
   if (entry.type === 'vocabulary') {
-    content = `<div class="card-definition">${escapeHtml(entry.definition || '')}</div>
-      ${entry.examples && entry.examples.length > 0 ? `<div class="card-examples">${entry.examples.filter(Boolean).map(ex => `<div class="card-example">📌 ${escapeHtml(ex)}</div>`).join('')}</div>` : ''}
-      ${entry.note ? `<div class="card-note">💡 ${escapeHtml(entry.note)}</div>` : ''}`;
+    content = `<div class="card-definition">${escHtml(entry.definition || '')}</div>
+      ${entry.examples?.length ? `<div class="card-examples">${entry.examples.filter(Boolean).map(ex => `<div class="card-example">📌 ${escHtml(ex)}</div>`).join('')}</div>` : ''}
+      ${entry.note ? `<div class="card-note">💡 ${escHtml(entry.note)}</div>` : ''}`;
   } else {
-    content = `<div class="card-definition">${escapeHtml((entry.content || '').substring(0, 200))}${(entry.content || '').length > 200 ? '...' : ''}</div>`;
+    const txt = entry.content || '';
+    content = `<div class="card-definition">${escHtml(txt.substring(0, 200))}${txt.length > 200 ? '...' : ''}</div>`;
   }
 
   return `<div class="entry-card ${typeClass} fade-in" data-id="${entry.id}">
     <div class="card-header">
-      <div style="display:flex;align-items:center;gap:8px;">
-        ${appState.selectMode ? `<input type="checkbox" class="tree-checkbox" ${checked} onchange="toggleEntrySelect('${entry.id}',this.checked)" style="flex-shrink:0;">` : ''}
-        <span class="card-title">${escapeHtml(entry.type === 'vocabulary' ? entry.word : entry.title)}</span>
+      <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+        ${S.selectMode ? `<input type="checkbox" ${checked} onchange="toggleEntrySelect('${entry.id}',this.checked)" style="flex-shrink:0;">` : ''}
+        <span class="card-title">${escHtml(entry.type === 'vocabulary' ? entry.word : entry.title)}</span>
       </div>
-      <div style="display:flex;align-items:center;gap:8px;">
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
         <span class="card-badge ${badgeClass}">${typeName}</span>
         <div class="card-actions">
           <button class="icon-btn light" onclick="editEntry('${entry.id}')" title="编辑">✏️</button>
@@ -1550,341 +1000,370 @@ function renderEntryCard(entry) {
       </div>
     </div>
     ${content}
-    ${catNames.length > 0 ? `<div class="card-tags">${catNames.map(n => `<span class="card-tag">📁 ${escapeHtml(n)}</span>`).join('')}</div>` : ''}</div>`;
+    ${catNames.length ? `<div class="card-tags">${catNames.map(n => `<span class="card-tag">📁 ${escHtml(n)}</span>`).join('')}</div>` : ''}
+  </div>`;
 }
 
-// ===================================================================
+// =====================================================================
 // CATEGORY CRUD
-// ===================================================================
+// =====================================================================
 async function createCategory(parentId) {
   const name = prompt('请输入分类名称:');
-  if (!name || !name.trim()) return;
-  await dbPut('categories', { id: generateId(), name: name.trim(), parentId: parentId || null, expanded: false, createdAt: Date.now() });
+  if (!name?.trim()) return;
+  await saveSnapshot();
+  const cat = { id: genId(), name: name.trim(), parentId: parentId || null, expanded: false, createdAt: Date.now() };
+  await saveCategory(cat);
   if (parentId) {
-    const parent = appState.categories.find(c => c.id === parentId);
-    if (parent && !parent.expanded) { parent.expanded = true; await dbPut('categories', parent); }
+    const parent = S.categories.find(c => c.id === parentId);
+    if (parent && !parent.expanded) { parent.expanded = true; await saveCategory(parent); }
   }
-  await loadAllData();
-  renderCategoryTree();
+  await loadAllData(); renderCategoryTree();
   showToast('分类创建成功', 'success');
 }
 
 function showContextMenu(e, catId) {
   e.preventDefault(); e.stopPropagation();
-  appState.contextMenuCategoryId = catId;
+  S.contextMenuCategoryId = catId;
   const menu = document.getElementById('contextMenu');
-  menu.style.left = e.clientX + 'px';
-  menu.style.top = e.clientY + 'px';
+  const x = Math.min(e.clientX, window.innerWidth - 170);
+  const y = Math.min(e.clientY, window.innerHeight - 160);
+  menu.style.left = x + 'px'; menu.style.top = y + 'px';
   menu.classList.add('show');
 }
 
-document.addEventListener('click', () => { document.getElementById('contextMenu').classList.remove('show'); });
+document.addEventListener('click', () => document.getElementById('contextMenu').classList.remove('show'));
 
 async function contextAction(action) {
-  const catId = appState.contextMenuCategoryId;
+  const catId = S.contextMenuCategoryId;
   document.getElementById('contextMenu').classList.remove('show');
   if (!catId) return;
-  if (action === 'addSub') {
-    await createCategory(catId);
-  } else if (action === 'rename') {
-    const cat = appState.categories.find(c => c.id === catId);
+
+  if (action === 'addSub') { await createCategory(catId); }
+  else if (action === 'rename') {
+    const cat = S.categories.find(c => c.id === catId);
     if (!cat) return;
     const name = prompt('请输入新名称:', cat.name);
-    if (!name || !name.trim()) return;
-    cat.name = name.trim();
-    await saveCategory(cat);
-    renderCategoryTree();
+    if (!name?.trim()) return;
+    await saveSnapshot();
+    cat.name = name.trim(); await saveCategory(cat);
+    await loadAllData(); renderCategoryTree();
     showToast('分类已重命名', 'success');
-  } else if (action === 'move') {
-    showMoveCategoryModal(catId);
-  } else if (action === 'delete') {
-    showConfirm('删除分类', '确定要删除此分类及其所有子分类吗？条目不会被删除。', async () => {
-      if (appState.selectedCategoryId === catId) appState.selectedCategoryId = null;
+  }
+  else if (action === 'move') showMoveCategoryModal(catId);
+  else if (action === 'delete') {
+    showConfirm('删除分类', '确定要删除此分类及其所有子分类吗？', async () => {
+      await saveSnapshot();
+      if (S.selectedCategoryId === catId) S.selectedCategoryId = null;
       await deleteCategoryRecursive(catId);
-      await loadAllData();
-      renderCategoryTree(); renderContent(); updateBreadcrumb();
+      await loadAllData(); renderAll();
       showToast('分类已删除', 'success');
     });
   }
 }
 
 function showMoveCategoryModal(catId) {
-  const cat = appState.categories.find(c => c.id === catId);
+  const cat = S.categories.find(c => c.id === catId);
   if (!cat) return;
-  openModal('移动分类: ' + cat.name, '', [
-    { text: '取消', class: 'btn-outline', action: 'closeModal()' },
-    { text: '移动到根级', class: 'btn-primary', action: `moveCategoryTo('${catId}',null)` },
-  ]);
-  document.getElementById('modalBody').innerHTML = `<p style="font-size:14px;color:var(--text-secondary);margin-bottom:16px;">选择目标父分类：</p>
-    <div class="category-selector">${renderCategorySelectorTree(getRootCategories().filter(c => c.id !== catId), false, catId)}</div>
-    <p style="font-size:12px;color:var(--text-light);margin-top:8px;">或者点击底部按钮移动到根级</p>`;
+  openModal('移动分类: ' + cat.name, `
+    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">选择目标父分类：</p>
+    <div class="category-selector">${renderCatSelectorTree(getRootCategories().filter(c => c.id !== catId), false, catId)}</div>
+    <p style="font-size:12px;color:var(--text-light);margin-top:8px;">或点击下方按钮移到根级</p>`,
+    [{ text: '取消', class: 'btn-outline', action: 'closeModal()' },
+     { text: '移动到根级', class: 'btn-primary', action: `moveCategoryTo('${catId}',null)` }]);
 }
 
 async function moveCategoryTo(catId, newParentId) {
-  const cat = appState.categories.find(c => c.id === catId);
+  await saveSnapshot();
+  const cat = S.categories.find(c => c.id === catId);
   if (!cat) return;
-  cat.parentId = newParentId;
-  await saveCategory(cat);
-  renderCategoryTree();
-  closeModal();
+  cat.parentId = newParentId; await saveCategory(cat);
+  await loadAllData(); renderCategoryTree(); closeModal();
   showToast('分类已移动', 'success');
 }
 
-// ===================================================================
+// =====================================================================
 // ENTRY CRUD
-// ===================================================================
+// =====================================================================
 function showAddEntryModal(type) {
-  if (!type) { const nt = appState.currentNotebook; type = nt === 'all' ? 'vocabulary' : nt; }
+  if (!type) { const nt = S.currentNotebook; type = nt === 'all' ? 'vocabulary' : nt; }
   const title = type === 'vocabulary' ? '新增生词' : type === 'grammar' ? '新增语法' : '新增素材';
+
   openModal(title, '', [
     { text: '取消', class: 'btn-outline', action: 'closeModal()' },
-    { text: '保存', class: 'btn-primary', action: `saveNewEntry('${type}')` },
+    { text: '保存', class: 'btn-primary', action: `saveNewEntry('${type}')` }
   ]);
   document.getElementById('modalContainer').classList.add('wide');
+
   const body = document.getElementById('modalBody');
-  let typeSelector = `<div class="form-group"><label class="form-label">条目类型</label><div style="display:flex;gap:8px;">
-    <button class="btn btn-sm ${type==='vocabulary'?'btn-secondary':'btn-outline'}" onclick="showAddEntryModal('vocabulary')">📝 生词</button>
-    <button class="btn btn-sm ${type==='grammar'?'btn-accent':'btn-outline'}" onclick="showAddEntryModal('grammar')">📐 语法</button>
-    <button class="btn btn-sm ${type==='material'?'btn-primary':'btn-outline'}" onclick="showAddEntryModal('material')">✨ 素材</button></div></div>`;
+  const typeSelector = `<div class="form-group"><label class="form-label">条目类型</label>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+      <button class="btn btn-sm ${type==='vocabulary'?'btn-secondary':'btn-outline'}" onclick="showAddEntryModal('vocabulary')">📝 生词</button>
+      <button class="btn btn-sm ${type==='grammar'?'btn-accent':'btn-outline'}" onclick="showAddEntryModal('grammar')">📐 语法</button>
+      <button class="btn btn-sm ${type==='material'?'btn-primary':'btn-outline'}" onclick="showAddEntryModal('material')">✨ 素材</button>
+    </div></div>`;
 
   if (type === 'vocabulary') {
     body.innerHTML = typeSelector + `
       <div class="form-group"><label class="form-label form-required">单词</label><input class="form-input" id="entryWord" placeholder="输入单词或短语"></div>
       <div class="form-group"><label class="form-label form-required">释义</label><input class="form-input" id="entryDefinition" placeholder="中文或英文释义"></div>
       <div class="form-group"><label class="form-label">例句</label><div class="example-list" id="exampleList">
-        <div class="example-item"><input class="form-input" placeholder="输入例句"><button class="btn btn-sm btn-ghost" onclick="addExampleInput()">➕</button></div></div></div>
-      <div class="form-group"><label class="form-label">备注</label><textarea class="form-textarea" id="entryNote" placeholder="可选的备注信息" rows="2"></textarea></div>
-      <div class="form-group"><label class="form-label">归属分类（可多选）</label><div class="category-selector" id="categorySelectorContainer">${renderCategorySelectorTree(getRootCategories(), true)}</div></div>`;
+        <div class="example-item"><input class="form-input" placeholder="输入例句"><button class="btn btn-sm btn-ghost" onclick="addExampleInput()">➕</button></div>
+      </div></div>
+      <div class="form-group"><label class="form-label">备注</label><textarea class="form-textarea" id="entryNote" placeholder="可选备注" rows="2"></textarea></div>
+      <div class="form-group"><label class="form-label">归属分类（可多选）</label>
+        <div class="category-selector" id="catSelContainer">${renderCatSelectorTree(getRootCategories(), true)}</div></div>`;
   } else {
     body.innerHTML = typeSelector + `
       <div class="form-group"><label class="form-label form-required">标题</label><input class="form-input" id="entryTitle" placeholder="输入标题"></div>
-      <div class="form-group"><label class="form-label">内容</label><textarea class="form-textarea" id="entryContent" placeholder="输入内容" rows="8" style="min-height:200px;"></textarea></div>
-      <div class="form-group"><label class="form-label">归属分类（可多选）</label><div class="category-selector" id="categorySelectorContainer">${renderCategorySelectorTree(getRootCategories(), true)}</div></div>`;
+      <div class="form-group"><label class="form-label">内容</label><textarea class="form-textarea" id="entryContent" placeholder="输入内容" rows="6" style="min-height:150px;"></textarea></div>
+      <div class="form-group"><label class="form-label">归属分类（可多选）</label>
+        <div class="category-selector" id="catSelContainer">${renderCatSelectorTree(getRootCategories(), true)}</div></div>`;
   }
 }
 
-function renderCategorySelectorTree(categories, showCheckboxes, excludeId) {
-  return categories.filter(c => c.id !== excludeId).map(cat => {
+function renderCatSelectorTree(cats, showCb, excludeId) {
+  return cats.filter(c => c.id !== excludeId).map(cat => {
     const children = getChildCategories(cat.id).filter(c => c.id !== excludeId);
-    const hasChildren = children.length > 0;
+    const hasCh = children.length > 0;
     return `<div class="tree-node">
       <div class="tree-node-header" style="color:var(--text-primary);"
-        ${!showCheckboxes ? `onclick="moveCategoryTo('${appState.contextMenuCategoryId}','${cat.id}')"` : ''}>
-        <span class="tree-toggle ${hasChildren ? '' : 'hidden'} expanded" onclick="event.stopPropagation();this.classList.toggle('expanded');this.closest('.tree-node').querySelector('.tree-children')?.classList.toggle('collapsed')">▶</span>
-        ${showCheckboxes ? `<input type="checkbox" class="tree-checkbox cat-select-cb" data-cat-id="${cat.id}" onclick="event.stopPropagation()">` : ''}
-        <span class="tree-icon">${hasChildren ? '📁' : '📄'}</span>
-        <span class="tree-label">${escapeHtml(cat.name)}</span></div>
-      ${hasChildren ? `<div class="tree-children">${renderCategorySelectorTree(children, showCheckboxes, excludeId)}</div>` : ''}</div>`;
+           ${!showCb ? `onclick="moveCategoryTo('${S.contextMenuCategoryId}','${cat.id}')"` : ''}>
+        <span class="tree-toggle ${hasCh?'':'hidden'} expanded" onclick="event.stopPropagation();this.classList.toggle('expanded');this.closest('.tree-node').querySelector('.tree-children')?.classList.toggle('collapsed')">▶</span>
+        ${showCb ? `<input type="checkbox" class="tree-checkbox cat-sel-cb" data-cat-id="${cat.id}" onclick="event.stopPropagation()">` : ''}
+        <span class="tree-icon">${hasCh ? '📁' : '📄'}</span>
+        <span class="tree-label">${escHtml(cat.name)}</span>
+      </div>
+      ${hasCh ? `<div class="tree-children">${renderCatSelectorTree(children, showCb, excludeId)}</div>` : ''}
+    </div>`;
   }).join('');
 }
 
 function addExampleInput() {
   const list = document.getElementById('exampleList');
-  const item = document.createElement('div');
-  item.className = 'example-item';
-  item.innerHTML = `<input class="form-input" placeholder="输入例句"><button class="btn btn-sm btn-ghost" onclick="this.parentElement.remove()">✖️</button>`;
-  list.appendChild(item);
+  const d = document.createElement('div'); d.className = 'example-item';
+  d.innerHTML = `<input class="form-input" placeholder="输入例句"><button class="btn btn-sm btn-ghost" onclick="this.parentElement.remove()">✕</button>`;
+  list.appendChild(d);
 }
 
 async function saveNewEntry(type) {
-  const entry = { id: generateId(), type, createdAt: Date.now() };
+  const entry = { id: genId(), type, createdAt: Date.now() };
   if (type === 'vocabulary') {
-    const word = document.getElementById('entryWord').value.trim();
-    const definition = document.getElementById('entryDefinition').value.trim();
-    if (!word) { showToast('请输入单词', 'error'); return; }
-    if (!definition) { showToast('请输入释义', 'error'); return; }
-    entry.word = word; entry.definition = definition;
-    entry.examples = Array.from(document.querySelectorAll('#exampleList input')).map(i => i.value.trim()).filter(Boolean);
+    const w = document.getElementById('entryWord').value.trim();
+    const d = document.getElementById('entryDefinition').value.trim();
+    if (!w) { showToast('请输入单词', 'error'); return; }
+    if (!d) { showToast('请输入释义', 'error'); return; }
+    entry.word = w; entry.definition = d;
+    entry.examples = [...document.querySelectorAll('#exampleList input')].map(i => i.value.trim()).filter(Boolean);
     entry.note = document.getElementById('entryNote').value.trim();
   } else {
-    const title = document.getElementById('entryTitle').value.trim();
-    if (!title) { showToast('请输入标题', 'error'); return; }
-    entry.title = title;
-    entry.content = document.getElementById('entryContent').value.trim();
+    const t = document.getElementById('entryTitle').value.trim();
+    if (!t) { showToast('请输入标题', 'error'); return; }
+    entry.title = t; entry.content = document.getElementById('entryContent').value.trim();
   }
+
+  await saveSnapshot();
   await saveEntry(entry);
-  const selectedCats = Array.from(document.querySelectorAll('.cat-select-cb:checked')).map(cb => cb.dataset.catId);
-  if (selectedCats.length > 0) await setEntryCategories(entry.id, selectedCats);
-  await loadAllData();
-  renderCategoryTree(); renderContent(); updateStats();
-  closeModal();
+  const selCats = [...document.querySelectorAll('.cat-sel-cb:checked')].map(cb => cb.dataset.catId);
+  if (selCats.length > 0) await setEntryCategories(entry.id, selCats);
+  await loadAllData(); renderAll(); closeModal();
   showToast('条目已保存', 'success');
 }
 
 async function editEntry(entryId) {
-  const entry = appState.entries.find(e => e.id === entryId);
+  const entry = S.entries.find(e => e.id === entryId);
   if (!entry) return;
   const type = entry.type;
   const title = type === 'vocabulary' ? '编辑生词' : type === 'grammar' ? '编辑语法' : '编辑素材';
+
   openModal(title, '', [
     { text: '取消', class: 'btn-outline', action: 'closeModal()' },
-    { text: '保存', class: 'btn-primary', action: `updateEntry('${entryId}')` },
+    { text: '保存', class: 'btn-primary', action: `updateEntry('${entryId}')` }
   ]);
   document.getElementById('modalContainer').classList.add('wide');
   const body = document.getElementById('modalBody');
-  const catIds = getEntryCategoryIds(entryId);
+  const catIds = getEntryCatIds(entryId);
 
   if (type === 'vocabulary') {
     body.innerHTML = `
-      <div class="form-group"><label class="form-label form-required">单词</label><input class="form-input" id="entryWord" value="${escapeAttr(entry.word || '')}"></div>
-      <div class="form-group"><label class="form-label form-required">释义</label><input class="form-input" id="entryDefinition" value="${escapeAttr(entry.definition || '')}"></div>
+      <div class="form-group"><label class="form-label form-required">单词</label><input class="form-input" id="entryWord" value="${escAttr(entry.word||'')}"></div>
+      <div class="form-group"><label class="form-label form-required">释义</label><input class="form-input" id="entryDefinition" value="${escAttr(entry.definition||'')}"></div>
       <div class="form-group"><label class="form-label">例句</label><div class="example-list" id="exampleList">
-        ${(entry.examples && entry.examples.length > 0 ? entry.examples : ['']).map((ex, i) => `<div class="example-item"><input class="form-input" value="${escapeAttr(ex)}" placeholder="输入例句">
-          ${i === 0 ? `<button class="btn btn-sm btn-ghost" onclick="addExampleInput()">➕</button>` : `<button class="btn btn-sm btn-ghost" onclick="this.parentElement.remove()">✖️</button>`}</div>`).join('')}</div></div>
-      <div class="form-group"><label class="form-label">备注</label><textarea class="form-textarea" id="entryNote" rows="2">${escapeHtml(entry.note || '')}</textarea></div>
-      <div class="form-group"><label class="form-label">归属分类（可多选）</label><div class="category-selector">${renderCategorySelectorTree(getRootCategories(), true)}</div></div>`;
+        ${(entry.examples || ['']).map((ex, i) => `<div class="example-item"><input class="form-input" value="${escAttr(ex)}" placeholder="输入例句">
+          ${i === 0 ? `<button class="btn btn-sm btn-ghost" onclick="addExampleInput()">➕</button>` : `<button class="btn btn-sm btn-ghost" onclick="this.parentElement.remove()">✕</button>`}</div>`).join('')}
+      </div></div>
+      <div class="form-group"><label class="form-label">备注</label><textarea class="form-textarea" id="entryNote" rows="2">${escHtml(entry.note||'')}</textarea></div>
+      <div class="form-group"><label class="form-label">归属分类（可多选）</label>
+        <div class="category-selector">${renderCatSelectorTree(getRootCategories(), true)}</div></div>`;
   } else {
     body.innerHTML = `
-      <div class="form-group"><label class="form-label form-required">标题</label><input class="form-input" id="entryTitle" value="${escapeAttr(entry.title || '')}"></div>
-      <div class="form-group"><label class="form-label">内容</label><textarea class="form-textarea" id="entryContent" rows="8" style="min-height:200px;">${escapeHtml(entry.content || '')}</textarea></div>
-      <div class="form-group"><label class="form-label">归属分类（可多选）</label><div class="category-selector">${renderCategorySelectorTree(getRootCategories(), true)}</div></div>`;
+      <div class="form-group"><label class="form-label form-required">标题</label><input class="form-input" id="entryTitle" value="${escAttr(entry.title||'')}"></div>
+      <div class="form-group"><label class="form-label">内容</label><textarea class="form-textarea" id="entryContent" rows="6" style="min-height:150px;">${escHtml(entry.content||'')}</textarea></div>
+      <div class="form-group"><label class="form-label">归属分类（可多选）</label>
+        <div class="category-selector">${renderCatSelectorTree(getRootCategories(), true)}</div></div>`;
   }
-  setTimeout(() => { catIds.forEach(cid => { const cb = document.querySelector(`.cat-select-cb[data-cat-id="${cid}"]`); if (cb) cb.checked = true; }); }, 50);
+  setTimeout(() => { catIds.forEach(cid => { const cb = document.querySelector(`.cat-sel-cb[data-cat-id="${cid}"]`); if (cb) cb.checked = true; }); }, 50);
 }
 
 async function updateEntry(entryId) {
-  const entry = appState.entries.find(e => e.id === entryId);
+  const entry = S.entries.find(e => e.id === entryId);
   if (!entry) return;
   if (entry.type === 'vocabulary') {
-    const word = document.getElementById('entryWord').value.trim();
-    const definition = document.getElementById('entryDefinition').value.trim();
-    if (!word) { showToast('请输入单词', 'error'); return; }
-    if (!definition) { showToast('请输入释义', 'error'); return; }
-    entry.word = word; entry.definition = definition;
-    entry.examples = Array.from(document.querySelectorAll('#exampleList input')).map(i => i.value.trim()).filter(Boolean);
+    const w = document.getElementById('entryWord').value.trim();
+    const d = document.getElementById('entryDefinition').value.trim();
+    if (!w) { showToast('请输入单词', 'error'); return; }
+    if (!d) { showToast('请输入释义', 'error'); return; }
+    entry.word = w; entry.definition = d;
+    entry.examples = [...document.querySelectorAll('#exampleList input')].map(i => i.value.trim()).filter(Boolean);
     entry.note = document.getElementById('entryNote').value.trim();
   } else {
-    const title = document.getElementById('entryTitle').value.trim();
-    if (!title) { showToast('请输入标题', 'error'); return; }
-    entry.title = title;
-    entry.content = document.getElementById('entryContent').value.trim();
+    const t = document.getElementById('entryTitle').value.trim();
+    if (!t) { showToast('请输入标题', 'error'); return; }
+    entry.title = t; entry.content = document.getElementById('entryContent').value.trim();
   }
+  await saveSnapshot();
   await saveEntry(entry);
-  const selectedCats = Array.from(document.querySelectorAll('.cat-select-cb:checked')).map(cb => cb.dataset.catId);
-  await setEntryCategories(entry.id, selectedCats);
-  await loadAllData();
-  renderCategoryTree(); renderContent(); updateStats();
-  closeModal();
+  const selCats = [...document.querySelectorAll('.cat-sel-cb:checked')].map(cb => cb.dataset.catId);
+  await setEntryCategories(entry.id, selCats);
+  await loadAllData(); renderAll(); closeModal();
   showToast('条目已更新', 'success');
 }
 
 function confirmDeleteEntry(entryId) {
-  const entry = appState.entries.find(e => e.id === entryId);
+  const entry = S.entries.find(e => e.id === entryId);
   if (!entry) return;
-  showConfirm('删除条目', `确定要删除"${entry.word || entry.title || '此条目'}"吗？`, async () => {
-    await deleteEntry(entryId);
-    await loadAllData();
-    renderCategoryTree(); renderContent(); updateStats();
+  const name = entry.word || entry.title || '此条目';
+  showConfirm('删除条目', `确定要删除"${name}"吗？`, async () => {
+    await saveSnapshot();
+    await deleteEntryFull(entryId);
+    await loadAllData(); renderAll();
     showToast('条目已删除', 'success');
   });
 }
 
-// ===================================================================
-// SELECT MODE
-// ===================================================================
+// =====================================================================
+// SELECT MODE & BATCH
+// =====================================================================
 function toggleSelectMode() {
-  appState.selectMode = !appState.selectMode;
-  appState.selectedEntries.clear();
+  S.selectMode = !S.selectMode;
+  S.selectedEntries.clear();
   const btn = document.getElementById('selectModeBtn');
-  btn.textContent = appState.selectMode ? '❌ 取消选择' : '☑️ 选择';
-  btn.className = appState.selectMode ? 'btn btn-danger' : 'btn btn-outline';
+  btn.textContent = S.selectMode ? '❌ 取消' : '☑️ 选择';
+  btn.className = S.selectMode ? 'btn btn-danger' : 'btn btn-outline';
   renderContent();
 }
 
-function toggleEntrySelect(entryId, checked) {
-  if (checked) appState.selectedEntries.add(entryId); else appState.selectedEntries.delete(entryId);
-  const countEl = document.getElementById('selectedCount');
-  if (countEl) countEl.textContent = appState.selectedEntries.size;
+function toggleEntrySelect(id, checked) {
+  if (checked) S.selectedEntries.add(id); else S.selectedEntries.delete(id);
+  const el = document.getElementById('selectedCount');
+  if (el) el.textContent = S.selectedEntries.size;
 }
 
 function toggleSelectAll(checked) {
-  const entries = getFilteredEntries();
-  if (checked) entries.forEach(e => appState.selectedEntries.add(e.id)); else appState.selectedEntries.clear();
+  getFilteredEntries().forEach(e => { if (checked) S.selectedEntries.add(e.id); else S.selectedEntries.delete(e.id); });
   renderContent();
 }
 
 async function deleteSelected() {
-  if (appState.selectedEntries.size === 0) { showToast('请先选择条目', 'error'); return; }
-  showConfirm('批量删除', `确定要删除选中的 ${appState.selectedEntries.size} 个条目吗？`, async () => {
-    for (const id of appState.selectedEntries) await deleteEntry(id);
-    appState.selectedEntries.clear();
-    await loadAllData();
-    renderCategoryTree(); renderContent(); updateStats();
+  if (S.selectedEntries.size === 0) { showToast('请先选择条目', 'error'); return; }
+  showConfirm('批量删除', `确定要删除选中的 ${S.selectedEntries.size} 个条目吗？`, async () => {
+    await saveSnapshot();
+    for (const id of S.selectedEntries) await deleteEntryFull(id);
+    S.selectedEntries.clear();
+    await loadAllData(); renderAll();
     showToast('已批量删除', 'success');
   });
 }
 
-// ===================================================================
+function batchMove() {
+  if (S.selectedEntries.size === 0) { showToast('请先选择条目', 'error'); return; }
+  openModal('批量移动到分类', `
+    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">选择目标分类（将把所选 ${S.selectedEntries.size} 个条目添加到该分类下）：</p>
+    <div class="category-selector" style="max-height:300px;">${renderCatSelectorTree(getRootCategories(), true)}</div>`,
+    [{ text: '取消', class: 'btn-outline', action: 'closeModal()' },
+     { text: '确认移动', class: 'btn-primary', action: 'executeBatchMove()' }]);
+}
+
+async function executeBatchMove() {
+  const selCats = [...document.querySelectorAll('.cat-sel-cb:checked')].map(cb => cb.dataset.catId);
+  if (selCats.length === 0) { showToast('请选择至少一个分类', 'error'); return; }
+  await saveSnapshot();
+  for (const entryId of S.selectedEntries) {
+    const existing = getEntryCatIds(entryId);
+    const merged = [...new Set([...existing, ...selCats])];
+    await setEntryCategories(entryId, merged);
+  }
+  await loadAllData(); renderAll(); closeModal();
+  showToast(`已将 ${S.selectedEntries.size} 个条目移动到选定分类`, 'success');
+}
+
+// =====================================================================
 // SEARCH
-// ===================================================================
+// =====================================================================
 let searchTimeout = null;
-document.getElementById('globalSearch').addEventListener('input', (e) => {
+document.getElementById('globalSearch').addEventListener('input', e => {
   clearTimeout(searchTimeout);
   searchTimeout = setTimeout(() => performSearch(e.target.value.trim()), 300);
 });
-
-document.getElementById('globalSearch').addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') { e.target.value = ''; appState.selectedCategoryId = null; renderContent(); updateBreadcrumb(); }
+document.getElementById('globalSearch').addEventListener('keydown', e => {
+  if (e.key === 'Escape') { e.target.value = ''; S.selectedCategoryId = null; renderAll(); }
 });
 
-function performSearch(query) {
-  if (!query) { renderContent(); updateBreadcrumb(); return; }
-  const lq = query.toLowerCase();
-  function scoreEntry(e) {
+function performSearch(q) {
+  if (!q) { renderAll(); return; }
+  const lq = q.toLowerCase();
+  function score(e) {
     let s = 0;
     if (e.type === 'vocabulary') {
-      if (e.word && e.word.toLowerCase() === lq) s = 100;
-      else if (e.word && e.word.toLowerCase().includes(lq)) s = 80;
-      if (e.definition && e.definition.toLowerCase().includes(lq)) s = Math.max(s, 60);
-      if (e.examples) for (const ex of e.examples) if (ex.toLowerCase().includes(lq)) { s = Math.max(s, 40); break; }
-      if (e.note && e.note.toLowerCase().includes(lq)) s = Math.max(s, 30);
+      if (e.word?.toLowerCase() === lq) s = 100;
+      else if (e.word?.toLowerCase().includes(lq)) s = 80;
+      if (e.definition?.toLowerCase().includes(lq)) s = Math.max(s, 60);
+      if (e.examples?.some(ex => ex.toLowerCase().includes(lq))) s = Math.max(s, 40);
+      if (e.note?.toLowerCase().includes(lq)) s = Math.max(s, 30);
     } else {
-      if (e.title && e.title.toLowerCase() === lq) s = 100;
-      else if (e.title && e.title.toLowerCase().includes(lq)) s = 70;
-      if (e.content && e.content.toLowerCase().includes(lq)) s = Math.max(s, 40);
+      if (e.title?.toLowerCase() === lq) s = 100;
+      else if (e.title?.toLowerCase().includes(lq)) s = 70;
+      if (e.content?.toLowerCase().includes(lq)) s = Math.max(s, 40);
     }
     return s;
   }
-  const results = appState.entries.map(e => ({ entry: e, score: scoreEntry(e) })).filter(r => r.score > 0).sort((a, b) => b.score - a.score);
+  const results = S.entries.map(e => ({ entry: e, score: score(e) })).filter(r => r.score > 0).sort((a, b) => b.score - a.score);
   const vr = results.filter(r => r.entry.type === 'vocabulary');
   const gr = results.filter(r => r.entry.type === 'grammar');
   const mr = results.filter(r => r.entry.type === 'material');
-  showSearchResults(query, vr, gr, mr);
+  showSearchResults(q, vr, gr, mr);
 }
 
-function showSearchResults(query, vr, gr, mr) {
+function showSearchResults(q, vr, gr, mr) {
+  document.getElementById('breadcrumb').innerHTML = `<span class="current">🔍 搜索: "${escHtml(q)}"</span>`;
+  let at = vr.length ? 'vocab' : gr.length ? 'grammar' : 'material';
   const body = document.getElementById('contentBody');
-  document.getElementById('breadcrumb').innerHTML = `<span class="current">🔍 搜索: "${escapeHtml(query)}"</span>`;
-  let at = 'vocab';
-  if (vr.length === 0 && gr.length > 0) at = 'grammar';
-  else if (vr.length === 0 && gr.length === 0 && mr.length > 0) at = 'material';
-
   body.innerHTML = `<div>
     <div class="search-tabs">
-      <button class="search-tab ${at==='vocab'?'active':''}" onclick="switchSearchTab('vocab',this)">📝 生词 <span class="tab-count">${vr.length}</span></button>
-      <button class="search-tab ${at==='grammar'?'active':''}" onclick="switchSearchTab('grammar',this)">📐 语法 <span class="tab-count">${gr.length}</span></button>
-      <button class="search-tab ${at==='material'?'active':''}" onclick="switchSearchTab('material',this)">✨ 素材 <span class="tab-count">${mr.length}</span></button>
+      <button class="search-tab ${at==='vocab'?'active':''}" onclick="switchSearchTab(this,'vocab')">📝 生词 <span class="tab-count">${vr.length}</span></button>
+      <button class="search-tab ${at==='grammar'?'active':''}" onclick="switchSearchTab(this,'grammar')">📐 语法 <span class="tab-count">${gr.length}</span></button>
+      <button class="search-tab ${at==='material'?'active':''}" onclick="switchSearchTab(this,'material')">✨ 素材 <span class="tab-count">${mr.length}</span></button>
     </div>
-    <div id="searchTabVocab" style="display:${at==='vocab'?'block':'none'}">${vr.length===0?'<p style="text-align:center;color:var(--text-light);padding:20px;">无结果</p>':vr.map(r=>renderSearchCard(r.entry,query)).join('')}</div>
-    <div id="searchTabGrammar" style="display:${at==='grammar'?'block':'none'}">${gr.length===0?'<p style="text-align:center;color:var(--text-light);padding:20px;">无结果</p>':gr.map(r=>renderSearchCard(r.entry,query)).join('')}</div>
-    <div id="searchTabMaterial" style="display:${at==='material'?'block':'none'}">${mr.length===0?'<p style="text-align:center;color:var(--text-light);padding:20px;">无结果</p>':mr.map(r=>renderSearchCard(r.entry,query)).join('')}</div></div>`;
+    <div id="sTabVocab" style="display:${at==='vocab'?'block':'none'}">${vr.length ? vr.map(r => renderSearchCard(r.entry, q)).join('') : '<p style="text-align:center;color:var(--text-light);padding:20px;">无结果</p>'}</div>
+    <div id="sTabGrammar" style="display:${at==='grammar'?'block':'none'}">${gr.length ? gr.map(r => renderSearchCard(r.entry, q)).join('') : '<p style="text-align:center;color:var(--text-light);padding:20px;">无结果</p>'}</div>
+    <div id="sTabMaterial" style="display:${at==='material'?'block':'none'}">${mr.length ? mr.map(r => renderSearchCard(r.entry, q)).join('') : '<p style="text-align:center;color:var(--text-light);padding:20px;">无结果</p>'}</div>
+  </div>`;
 }
 
-function switchSearchTab(tab, el) {
-  document.querySelectorAll('.search-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('[id^="searchTab"]').forEach(c => c.style.display = 'none');
+function switchSearchTab(el, tab) {
+  el.closest('.search-tabs').querySelectorAll('.search-tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
-  document.getElementById('searchTab' + tab.charAt(0).toUpperCase() + tab.slice(1)).style.display = 'block';
+  ['sTabVocab', 'sTabGrammar', 'sTabMaterial'].forEach(id => document.getElementById(id).style.display = 'none');
+  document.getElementById(tab === 'vocab' ? 'sTabVocab' : tab === 'grammar' ? 'sTabGrammar' : 'sTabMaterial').style.display = 'block';
 }
 
-function renderSearchCard(entry, query) {
-  const hl = (text) => {
-    if (!text || !query) return escapeHtml(text || '');
-    const escaped = escapeHtml(text);
-    const escapedQuery = escapeHtml(query);
-    return escaped.replace(new RegExp(`(${escapeRegex(escapedQuery)})`, 'gi'), '<mark>$1</mark>');
+function renderSearchCard(entry, q) {
+  const hl = text => {
+    if (!text || !q) return escHtml(text || '');
+    const escaped = escHtml(text);
+    const escapedQ = escHtml(q);
+    return escaped.replace(new RegExp(`(${escRegex(escapedQ)})`, 'gi'), '<mark>$1</mark>');
   };
-  const tc = entry.type === 'vocabulary' ? 'vocab-card' : entry.type === 'grammar' ? 'grammar-card' : 'material-card';
+  const typeClass = entry.type === 'vocabulary' ? 'vocab-card' : entry.type === 'grammar' ? 'grammar-card' : 'material-card';
   let content = '';
   if (entry.type === 'vocabulary') {
     content = `<div class="card-definition">${hl(entry.definition)}</div>
@@ -1893,124 +1372,120 @@ function renderSearchCard(entry, query) {
   } else {
     content = `<div class="card-definition">${hl((entry.content || '').substring(0, 200))}</div>`;
   }
-  return `<div class="entry-card ${tc} fade-in"><div class="card-header">
-    <span class="card-title">${hl(entry.type === 'vocabulary' ? entry.word : entry.title)}</span>
-    <div class="card-actions" style="opacity:1"><button class="icon-btn light" onclick="editEntry('${entry.id}')" title="编辑">✏️</button></div></div>${content}</div>`;
+  return `<div class="entry-card ${typeClass} fade-in">
+    <div class="card-header">
+      <span class="card-title">${hl(entry.type === 'vocabulary' ? entry.word : entry.title)}</span>
+      <div class="card-actions" style="opacity:1"><button class="icon-btn light" onclick="editEntry('${entry.id}')">✏️</button></div>
+    </div>${content}</div>`;
 }
 
-// ===================================================================
+// =====================================================================
 // QUIZ
-// ===================================================================
-let quizState = { words: [], currentIndex: 0, mode: 'spell', interfaceMode: 'practice', answers: [], submitted: false };
+// =====================================================================
+let quiz = { words: [], idx: 0, mode: 'spell', iface: 'practice', answers: [], submitted: false };
 
 function showQuizSetup() {
-  const ve = appState.entries.filter(e => e.type === 'vocabulary');
-  if (ve.length === 0) { showToast('生词本中没有单词', 'error'); return; }
-  openModal('测验设置', '', [
-    { text: '取消', class: 'btn-outline', action: 'closeModal()' },
-    { text: '开始测验', class: 'btn-primary', action: 'startQuiz()' },
-  ]);
+  const ve = S.entries.filter(e => e.type === 'vocabulary');
+  if (!ve.length) { showToast('生词本中没有单词', 'error'); return; }
+  openModal('测验设置', `
+    <div>
+      <div class="quiz-option-group"><h4>📋 选择范围</h4>
+        <p style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;">勾选分类或留空使用全部</p>
+        <div class="category-selector" style="max-height:200px;">${renderCatSelectorTree(getRootCategories(), true)}</div>
+      </div>
+      <div class="quiz-option-group"><h4>🔢 抽取数量</h4>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <input class="form-input" id="quizCount" type="number" min="1" max="${ve.length}" value="${Math.min(10,ve.length)}" style="width:100px;">
+          <span style="font-size:12px;color:var(--text-secondary);">/ ${ve.length} 可用</span>
+        </div>
+      </div>
+      <div class="quiz-option-group"><h4>📝 出题模式</h4>
+        <div class="radio-group">
+          <label class="radio-item"><input type="radio" name="qMode" value="spell" checked> 拼写模式（给单词写释义）</label>
+          <label class="radio-item"><input type="radio" name="qMode" value="recognize"> 识词模式（给释义写单词）</label>
+        </div>
+      </div>
+      <div class="quiz-option-group"><h4>🖥️ 测验界面</h4>
+        <div class="radio-group">
+          <label class="radio-item"><input type="radio" name="qIface" value="practice" checked> 练习模式</label>
+          <label class="radio-item"><input type="radio" name="qIface" value="exam"> 试卷模式</label>
+        </div>
+      </div>
+    </div>`,
+    [{ text: '取消', class: 'btn-outline', action: 'closeModal()' },
+     { text: '开始测验', class: 'btn-primary', action: 'startQuiz()' }]);
   document.getElementById('modalContainer').classList.add('wide');
-  document.getElementById('modalBody').innerHTML = `<div class="quiz-setup">
-    <div class="quiz-option-group"><h4>📋 选择范围</h4>
-      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">勾选分类范围，不选则从全部生词抽取。</p>
-      <div class="category-selector" style="max-height:250px;">${renderCategorySelectorTree(getRootCategories(), true)}</div></div>
-    <div class="quiz-option-group"><h4>🔢 抽取数量</h4>
-      <div style="display:flex;align-items:center;gap:12px;">
-        <input class="form-input" id="quizCount" type="number" min="1" max="${ve.length}" value="${Math.min(10,ve.length)}" style="width:120px;">
-        <span style="font-size:13px;color:var(--text-secondary);">/ 可用 ${ve.length} 个</span></div></div>
-    <div class="quiz-option-group"><h4>📝 出题模式</h4><div class="radio-group">
-      <label class="radio-item"><input type="radio" name="quizMode" value="spell" checked> 拼写/回忆（给单词写释义）</label>
-      <label class="radio-item"><input type="radio" name="quizMode" value="recognize"> 识词（给释义写单词）</label></div></div>
-    <div class="quiz-option-group"><h4>🖥️ 测验界面</h4><div class="radio-group">
-      <label class="radio-item"><input type="radio" name="quizInterface" value="practice" checked> 练习模式（即时反馈）</label>
-      <label class="radio-item"><input type="radio" name="quizInterface" value="exam"> 试卷模式（导出PDF）</label></div></div>
-    <div class="quiz-option-group"><h4>📏 试卷字号（仅试卷模式）</h4>
-      <div class="font-size-selector" id="quizFontSize">
-        <div class="font-size-option" data-size="12" onclick="selectFontSize(this,'quizFontSize')">小号 12px</div>
-        <div class="font-size-option selected" data-size="14" onclick="selectFontSize(this,'quizFontSize')">中号 14px</div>
-        <div class="font-size-option" data-size="16" onclick="selectFontSize(this,'quizFontSize')">大号 16px</div>
-        <div class="font-size-option" data-size="18" onclick="selectFontSize(this,'quizFontSize')">超大 18px</div>
-        <div class="font-size-option" data-size="20" onclick="selectFontSize(this,'quizFontSize')">特大 20px</div>
-      </div></div></div>`;
-}
-
-function selectFontSize(el, containerId) {
-  document.querySelectorAll(`#${containerId} .font-size-option`).forEach(o => o.classList.remove('selected'));
-  el.classList.add('selected');
-}
-
-function getSelectedFontSize(containerId) {
-  const sel = document.querySelector(`#${containerId} .font-size-option.selected`);
-  return sel ? parseInt(sel.dataset.size) : 14;
 }
 
 function startQuiz() {
   const count = parseInt(document.getElementById('quizCount').value) || 10;
-  const mode = document.querySelector('input[name="quizMode"]:checked').value;
-  const interfaceMode = document.querySelector('input[name="quizInterface"]:checked').value;
-  const fontSize = getSelectedFontSize('quizFontSize');
-  const selectedCats = Array.from(document.querySelectorAll('.cat-select-cb:checked')).map(cb => cb.dataset.catId);
+  const mode = document.querySelector('input[name="qMode"]:checked').value;
+  const iface = document.querySelector('input[name="qIface"]:checked').value;
+  const selCats = [...document.querySelectorAll('.cat-sel-cb:checked')].map(cb => cb.dataset.catId);
+
   let ve;
-  if (selectedCats.length > 0) {
+  if (selCats.length) {
     const ids = new Set();
-    selectedCats.forEach(cid => getCategoryEntries(cid).filter(e => e.type === 'vocabulary').forEach(e => ids.add(e.id)));
-    ve = appState.entries.filter(e => ids.has(e.id));
+    selCats.forEach(cid => getCategoryEntries(cid).filter(e => e.type === 'vocabulary').forEach(e => ids.add(e.id)));
+    ve = S.entries.filter(e => ids.has(e.id));
   } else {
-    ve = appState.entries.filter(e => e.type === 'vocabulary');
+    ve = S.entries.filter(e => e.type === 'vocabulary');
   }
-  if (ve.length === 0) { showToast('所选范围内没有单词', 'error'); return; }
-  const picked = [...ve].sort(() => Math.random() - 0.5).slice(0, Math.min(count, ve.length));
-  quizState = { words: picked, currentIndex: 0, mode, interfaceMode, answers: new Array(picked.length).fill(''), submitted: false, fontSize };
+  if (!ve.length) { showToast('所选范围内没有单词', 'error'); return; }
+
+  const shuffled = [...ve].sort(() => Math.random() - 0.5);
+  quiz = { words: shuffled.slice(0, Math.min(count, shuffled.length)), idx: 0, mode, iface, answers: new Array(Math.min(count, shuffled.length)).fill(''), submitted: false };
   closeModal();
-  if (interfaceMode === 'exam') renderExamPaper(); else renderPracticeQuiz();
+  if (iface === 'exam') renderExamPaper(); else renderPracticeQuiz();
 }
 
 function renderPracticeQuiz() {
-  const { words, currentIndex, mode } = quizState;
-  const w = words[currentIndex];
-  const progress = (currentIndex / words.length * 100);
+  const { words, idx, mode } = quiz;
+  const w = words[idx];
+  const progress = idx / words.length * 100;
   const question = mode === 'spell' ? w.word : w.definition;
-  const hint = mode === 'spell' ? '请输入该单词的释义' : '请输入对应的单词';
-  document.getElementById('contentBody').innerHTML = `<div class="quiz-practice">
-    <div class="quiz-progress">第 ${currentIndex+1} 题，共 ${words.length} 题</div>
+  const hint = mode === 'spell' ? '请输入释义' : '请输入单词';
+  const body = document.getElementById('contentBody');
+  body.innerHTML = `<div class="quiz-practice">
+    <div class="quiz-progress">第 ${idx+1} 题 / 共 ${words.length} 题</div>
     <div class="quiz-progress-bar"><div class="quiz-progress-fill" style="width:${progress}%"></div></div>
-    <div class="quiz-question">${escapeHtml(question)}</div>
+    <div class="quiz-question">${escHtml(question)}</div>
     <div class="quiz-hint">${hint}</div>
-    <input class="quiz-input" id="quizAnswer" placeholder="输入你的答案..." autofocus onkeydown="if(event.key==='Enter')checkAnswer()">
+    <input class="quiz-input" id="quizAnswer" placeholder="输入答案..." autofocus onkeydown="if(event.key==='Enter')checkAnswer()">
     <div id="quizFeedback"></div>
-    <div style="margin-top:24px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-      <button class="btn btn-outline" onclick="exitQuiz()">退出测验</button>
-      <button class="btn btn-primary" id="quizCheckBtn" onclick="checkAnswer()">✅ 提交答案</button>
-      <button class="btn btn-secondary" id="quizNextBtn" onclick="nextQuestion()" style="display:none;">下一题 ➡️</button></div></div>`;
+    <div style="margin-top:20px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+      <button class="btn btn-outline" onclick="exitQuiz()">退出</button>
+      <button class="btn btn-primary" id="qCheckBtn" onclick="checkAnswer()">✅ 提交</button>
+      <button class="btn btn-secondary" id="qNextBtn" onclick="nextQuestion()" style="display:none;">下一题 ➡️</button>
+    </div>
+  </div>`;
   setTimeout(() => document.getElementById('quizAnswer')?.focus(), 100);
 }
 
 function checkAnswer() {
   const input = document.getElementById('quizAnswer');
-  const answer = input.value.trim();
-  if (!answer) return;
-  const { words, currentIndex, mode } = quizState;
-  const correct = mode === 'spell' ? words[currentIndex].definition : words[currentIndex].word;
-  quizState.answers[currentIndex] = answer;
-  const isCorrect = answer.toLowerCase() === correct.toLowerCase();
-  document.getElementById('quizFeedback').innerHTML = isCorrect
-    ? `<div class="quiz-feedback correct">✅ 正确！</div>`
-    : `<div class="quiz-feedback incorrect">❌ 错误！正确答案: <strong>${escapeHtml(correct)}</strong></div>`;
+  const ans = input.value.trim();
+  if (!ans) return;
+  const { words, idx, mode } = quiz;
+  const correct = mode === 'spell' ? words[idx].definition : words[idx].word;
+  quiz.answers[idx] = ans;
+  const isCorrect = ans.toLowerCase() === correct.toLowerCase();
+  const fb = document.getElementById('quizFeedback');
+  fb.innerHTML = isCorrect ? `<div class="quiz-feedback correct">✅ 正确！</div>` :
+    `<div class="quiz-feedback incorrect">❌ 错误！正确答案: <strong>${escHtml(correct)}</strong></div>`;
   input.disabled = true;
-  document.getElementById('quizCheckBtn').style.display = 'none';
-  const nextBtn = document.getElementById('quizNextBtn');
-  nextBtn.style.display = '';
-  nextBtn.textContent = currentIndex >= words.length - 1 ? '查看结果 📊' : '下一题 ➡️';
+  document.getElementById('qCheckBtn').style.display = 'none';
+  const nb = document.getElementById('qNextBtn'); nb.style.display = '';
+  nb.textContent = idx >= words.length - 1 ? '查看结果 📊' : '下一题 ➡️';
 }
 
 function nextQuestion() {
-  quizState.currentIndex++;
-  if (quizState.currentIndex >= quizState.words.length) showQuizResults(); else renderPracticeQuiz();
+  quiz.idx++;
+  if (quiz.idx >= quiz.words.length) showQuizResults(); else renderPracticeQuiz();
 }
 
 function showQuizResults() {
-  const { words, answers, mode } = quizState;
+  const { words, answers, mode } = quiz;
   let correct = 0;
   const details = words.map((w, i) => {
     const ca = mode === 'spell' ? w.definition : w.word;
@@ -2018,420 +1493,497 @@ function showQuizResults() {
     if (ic) correct++;
     return { word: w, answer: answers[i], correctAnswer: ca, isCorrect: ic };
   });
-  const pct = Math.round((correct / words.length) * 100);
-  document.getElementById('contentBody').innerHTML = `<div class="quiz-score">
-    <div class="score-circle">${pct}%</div><h2>测验完成！</h2>
-    <p style="color:var(--text-secondary);margin-bottom:24px;">共 ${words.length} 题，正确 ${correct} 题，错误 ${words.length-correct} 题</p>
-    <button class="btn btn-primary" onclick="exitQuiz()">返回</button>
-    <button class="btn btn-secondary" onclick="showQuizSetup()" style="margin-left:8px;">再来一次</button></div>
-    <div style="max-width:600px;margin:0 auto;"><h3 style="margin-bottom:16px;">详细结果</h3>
-    ${details.map((d,i) => `<div class="entry-card" style="border-left-color:${d.isCorrect?'var(--success)':'var(--danger)'}">
-      <div class="card-header"><span class="card-title">${i+1}. ${escapeHtml(mode==='spell'?d.word.word:d.word.definition)}</span><span style="font-size:20px;">${d.isCorrect?'✅':'❌'}</span></div>
-      <div class="card-definition">你的答案: <strong>${escapeHtml(d.answer)}</strong>${!d.isCorrect?` | 正确答案: <strong style="color:var(--success)">${escapeHtml(d.correctAnswer)}</strong>`:''}</div></div>`).join('')}</div>`;
+  const pct = Math.round(correct / words.length * 100);
+  document.getElementById('contentBody').innerHTML = `
+    <div class="quiz-score">
+      <div class="score-circle">${pct}%</div>
+      <h2>测验完成！</h2>
+      <p style="color:var(--text-secondary);margin-bottom:20px;">共 ${words.length} 题，正确 ${correct} 题</p>
+      <button class="btn btn-primary" onclick="exitQuiz()">返回</button>
+      <button class="btn btn-secondary" onclick="showQuizSetup()" style="margin-left:8px;">再来一次</button>
+    </div>
+    <div style="max-width:600px;margin:0 auto;">
+      <h3 style="margin-bottom:12px;">详细结果</h3>
+      ${details.map((d, i) => `<div class="entry-card" style="border-left-color:${d.isCorrect?'var(--success)':'var(--danger)'}">
+        <div class="card-header"><span class="card-title">${i+1}. ${escHtml(mode==='spell'?d.word.word:d.word.definition)}</span><span>${d.isCorrect?'✅':'❌'}</span></div>
+        <div class="card-definition">你的答案: <strong>${escHtml(d.answer)}</strong>${!d.isCorrect?` | 正确: <strong style="color:var(--success)">${escHtml(d.correctAnswer)}</strong>`:''}</div>
+      </div>`).join('')}
+    </div>`;
 }
 
 function renderExamPaper() {
-  const { words, mode, fontSize } = quizState;
+  const { words, mode } = quiz;
   const date = new Date().toLocaleDateString('zh-CN');
   const modeText = mode === 'spell' ? '看单词写释义' : '看释义写单词';
-  const fs = fontSize || 14;
   document.getElementById('contentBody').innerHTML = `
-    <div class="pdf-preview-controls no-print">
-      <button class="btn btn-primary" onclick="window.print()">🖨️ 打印 / 导出PDF</button>
-      <button class="btn btn-outline" onclick="exitQuiz()" style="margin-left:8px;">返回</button>
-    </div>
-    <div class="exam-paper" id="examPaper" style="font-size:${fs}px;">
-      <h1 style="font-size:${fs+8}px;">📖 英语词汇测验</h1>
-      <div class="exam-info" style="font-size:${fs-1}px;">日期: ${date} | 模式: ${modeText} | 题数: ${words.length}</div>
-      <div class="exam-info" style="font-size:${fs-1}px;">姓名: _____________ 得分: _______ / ${words.length}</div>
-      <div class="exam-section"><h3 style="font-size:${fs+1}px;">请根据提示写出对应的${mode==='spell'?'释义':'单词'}：</h3>
-        ${words.map((w,i) => `<div class="exam-question" style="font-size:${fs}px;"><span class="q-num">${i+1}.</span> ${escapeHtml(mode==='spell'?w.word:w.definition)} : <span class="exam-blank"></span></div>`).join('')}</div>
-      <div class="exam-section" style="margin-top:40px;border-top:2px dashed #ccc;padding-top:20px;">
-        <h3 style="font-size:${fs+1}px;">参考答案（请裁剪后保管）</h3>
-        <div style="font-size:${fs-2}px;column-count:2;column-gap:20px;">
-          ${words.map((w,i) => `<p>${i+1}. ${escapeHtml(mode==='spell'?w.definition:w.word)}</p>`).join('')}</div></div></div>`;
-}
-
-function exitQuiz() { renderContent(); updateBreadcrumb(); }
-
-// ===================================================================
-// PDF NOTES EXPORT
-// ===================================================================
-function showPdfExportModal() {
-  openModal('导出笔记为 PDF', '', [
-    { text: '取消', class: 'btn-outline', action: 'closeModal()' },
-    { text: '预览并导出', class: 'btn-primary', action: 'previewPdfExport()' },
-  ]);
-  document.getElementById('modalContainer').classList.add('wide');
-
-  const entries = getFilteredEntries();
-  const vc = entries.filter(e => e.type === 'vocabulary').length;
-  const gc = entries.filter(e => e.type === 'grammar').length;
-  const mc = entries.filter(e => e.type === 'material').length;
-
-  document.getElementById('modalBody').innerHTML = `
-    <div class="quiz-option-group">
-      <h4>📋 导出范围</h4>
-      <div class="radio-group" style="margin-bottom:12px;">
-        <label class="radio-item"><input type="radio" name="pdfScope" value="current" checked> 当前视图 (${entries.length}条)</label>
-        <label class="radio-item"><input type="radio" name="pdfScope" value="all"> 全部数据</label>
-        <label class="radio-item"><input type="radio" name="pdfScope" value="notebook"> 按笔记本选择</label>
-        <label class="radio-item"><input type="radio" name="pdfScope" value="category"> 按分类选择</label>
-        ${appState.selectMode && appState.selectedEntries.size > 0 ? `<label class="radio-item"><input type="radio" name="pdfScope" value="selected"> 已选条目 (${appState.selectedEntries.size}条)</label>` : ''}
+    <div style="text-align:center;margin-bottom:16px;">
+      <div style="display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
+        <span style="font-size:13px;color:var(--text-secondary);">字号：</span>
+        <div class="font-size-options">
+          <div class="font-size-opt" data-size="small" onclick="setExamFontSize(this,'small')">小号</div>
+          <div class="font-size-opt active" data-size="medium" onclick="setExamFontSize(this,'medium')">中号</div>
+          <div class="font-size-opt" data-size="large" onclick="setExamFontSize(this,'large')">大号</div>
+          <div class="font-size-opt" data-size="xlarge" onclick="setExamFontSize(this,'xlarge')">超大</div>
+        </div>
       </div>
-      <div id="pdfScopeDetail"></div>
+      <button class="btn btn-primary" onclick="exportExamPDF()">📄 导出PDF</button>
+      <button class="btn btn-outline" onclick="exitQuiz()" style="margin-left:6px;">返回</button>
     </div>
-    <div class="quiz-option-group">
-      <h4>📝 包含笔记本</h4>
-      <div class="checkbox-group" id="pdfNotebooks">
-        <label class="checkbox-item"><input type="checkbox" value="vocabulary" checked> 📝 生词本 (${vc})</label>
-        <label class="checkbox-item"><input type="checkbox" value="grammar" checked> 📐 语法本 (${gc})</label>
-        <label class="checkbox-item"><input type="checkbox" value="material" checked> ✨ 素材本 (${mc})</label>
+    <div class="exam-paper" id="examPaper">
+      <h1>📖 英语词汇测验</h1>
+      <div class="exam-info">日期: ${date} | 模式: ${modeText} | 题数: ${words.length}</div>
+      <div class="exam-info">姓名: _____________ 得分: ______ / ${words.length}</div>
+      <div class="exam-section"><h3>请根据提示写出对应的${mode==='spell'?'释义':'单词'}：</h3>
+        ${words.map((w, i) => `<div class="exam-question"><span class="q-num">${i+1}.</span> ${escHtml(mode==='spell'?w.word:w.definition)} : <span class="exam-blank"></span></div>`).join('')}
       </div>
-    </div>
-    <div class="quiz-option-group">
-      <h4>📏 字号大小</h4>
-      <div class="font-size-selector" id="pdfFontSize">
-        <div class="font-size-option" data-size="11" onclick="selectFontSize(this,'pdfFontSize')">小号 11px</div>
-        <div class="font-size-option selected" data-size="13" onclick="selectFontSize(this,'pdfFontSize')">中号 13px</div>
-        <div class="font-size-option" data-size="15" onclick="selectFontSize(this,'pdfFontSize')">大号 15px</div>
-        <div class="font-size-option" data-size="17" onclick="selectFontSize(this,'pdfFontSize')">超大 17px</div>
-        <div class="font-size-option" data-size="20" onclick="selectFontSize(this,'pdfFontSize')">特大 20px</div>
+      <div class="exam-section" style="margin-top:30px;border-top:2px dashed #ccc;padding-top:16px;">
+        <h3>参考答案</h3>
+        <div style="font-size:12px;column-count:2;column-gap:16px;">
+          ${words.map((w, i) => `<p>${i+1}. ${escHtml(mode==='spell'?w.definition:w.word)}</p>`).join('')}
+        </div>
       </div>
     </div>`;
+}
 
-  document.querySelectorAll('input[name="pdfScope"]').forEach(r => {
-    r.addEventListener('change', (e) => {
-      const det = document.getElementById('pdfScopeDetail');
-      if (e.target.value === 'notebook') {
-        det.innerHTML = ''; // notebook checkboxes already shown below
-      } else if (e.target.value === 'category') {
-        det.innerHTML = `<div class="category-selector" style="max-height:200px;">${renderCategorySelectorTree(getRootCategories(), true)}</div>`;
-      } else { det.innerHTML = ''; }
-    });
+function setExamFontSize(el, size) {
+  document.querySelectorAll('.font-size-opt').forEach(o => o.classList.remove('active'));
+  el.classList.add('active');
+  const paper = document.getElementById('examPaper');
+  const sizes = { small: '12px', medium: '14px', large: '16px', xlarge: '18px' };
+  const lineHeights = { small: '1.6', medium: '1.8', large: '2.0', xlarge: '2.2' };
+  paper.querySelectorAll('.exam-question').forEach(q => {
+    q.style.fontSize = sizes[size]; q.style.lineHeight = lineHeights[size];
+    q.style.marginBottom = size === 'xlarge' ? '18px' : size === 'large' ? '16px' : '12px';
   });
 }
 
-function exportSelectedAsPdf() {
-  if (appState.selectedEntries.size === 0) { showToast('请先选择条目', 'error'); return; }
-  const entries = appState.entries.filter(e => appState.selectedEntries.has(e.id));
-  showPdfFontSizeDialog(entries);
+function exitQuiz() { renderAll(); }
+
+// =====================================================================
+// PDF EXPORT (using jsPDF + html2canvas)
+// =====================================================================
+async function generatePDFFromElement(element, filename) {
+  showToast('正在生成PDF，请稍候...', 'info');
+  try {
+    const canvas = await html2canvas(element, { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false });
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = 210;
+    const pageHeight = 297;
+    const margin = 10;
+    const contentWidth = pageWidth - 2 * margin;
+    const imgWidth = contentWidth;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+    let yPos = margin;
+    let remainingHeight = imgHeight;
+    const pageContentHeight = pageHeight - 2 * margin;
+
+    // If content fits in one page
+    if (imgHeight <= pageContentHeight) {
+      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', margin, margin, imgWidth, imgHeight);
+    } else {
+      // Multi-page
+      let srcY = 0;
+      let pageNum = 0;
+      while (remainingHeight > 0) {
+        if (pageNum > 0) pdf.addPage();
+        const sliceHeight = Math.min(pageContentHeight, remainingHeight);
+        const sliceCanvas = document.createElement('canvas');
+        sliceCanvas.width = canvas.width;
+        sliceCanvas.height = (sliceHeight / imgHeight) * canvas.height;
+        const ctx = sliceCanvas.getContext('2d');
+        ctx.drawImage(canvas, 0, srcY, canvas.width, sliceCanvas.height, 0, 0, canvas.width, sliceCanvas.height);
+        pdf.addImage(sliceCanvas.toDataURL('image/png'), 'PNG', margin, margin, imgWidth, sliceHeight);
+        srcY += sliceCanvas.height;
+        remainingHeight -= sliceHeight;
+        pageNum++;
+      }
+    }
+    pdf.save(filename);
+    showToast('PDF导出成功', 'success');
+  } catch (e) {
+    console.error('PDF export error:', e);
+    showToast('PDF导出失败: ' + e.message, 'error');
+  }
 }
 
-function showPdfFontSizeDialog(entries) {
-  openModal('选择PDF字号', '', [
-    { text: '取消', class: 'btn-outline', action: 'closeModal()' },
-    { text: '预览并导出', class: 'btn-primary', action: 'previewPdfFromDialog()' },
-  ]);
-  window._pdfDialogEntries = entries;
-  document.getElementById('modalBody').innerHTML = `
-    <div class="quiz-option-group">
-      <h4>📏 字号大小</h4>
-      <div class="font-size-selector" id="dialogFontSize">
-        <div class="font-size-option" data-size="11" onclick="selectFontSize(this,'dialogFontSize')">小号 11px</div>
-        <div class="font-size-option selected" data-size="13" onclick="selectFontSize(this,'dialogFontSize')">中号 13px</div>
-        <div class="font-size-option" data-size="15" onclick="selectFontSize(this,'dialogFontSize')">大号 15px</div>
-        <div class="font-size-option" data-size="17" onclick="selectFontSize(this,'dialogFontSize')">超大 17px</div>
-        <div class="font-size-option" data-size="20" onclick="selectFontSize(this,'dialogFontSize')">特大 20px</div>
+async function exportExamPDF() {
+  const el = document.getElementById('examPaper');
+  if (!el) return;
+  await generatePDFFromElement(el, 'vocabulary-quiz.pdf');
+}
+
+async function exportSelectedPDF() {
+  if (S.selectedEntries.size === 0) { showToast('请先选择条目', 'error'); return; }
+  showNotesExportModal([...S.selectedEntries]);
+}
+
+function showNotesExportModal(entryIds) {
+  const entries = S.entries.filter(e => entryIds.includes(e.id));
+  if (!entries.length) { showToast('没有可导出的条目', 'error'); return; }
+
+  openModal('导出笔记为PDF', `
+    <div class="quiz-option-group"><h4>📄 字号设置</h4>
+      <div class="font-size-options">
+        <div class="font-size-opt" data-size="small" onclick="selectNotesFontSize(this)">小号</div>
+        <div class="font-size-opt active" data-size="medium" onclick="selectNotesFontSize(this)">中号</div>
+        <div class="font-size-opt" data-size="large" onclick="selectNotesFontSize(this)">大号</div>
+        <div class="font-size-opt" data-size="xlarge" onclick="selectNotesFontSize(this)">超大</div>
       </div>
     </div>
-    <div class="quiz-option-group" style="margin-top:12px;">
-      <h4>📊 导出摘要</h4>
-      <p style="font-size:14px;color:var(--text-secondary);">
-        共 <strong>${entries.length}</strong> 个条目：
-        生词 <strong>${entries.filter(e=>e.type==='vocabulary').length}</strong>，
-        语法 <strong>${entries.filter(e=>e.type==='grammar').length}</strong>，
-        素材 <strong>${entries.filter(e=>e.type==='material').length}</strong>
-      </p>
-    </div>`;
+    <div class="quiz-option-group"><h4>📋 预览 (${entries.length} 个条目)</h4>
+      <div style="max-height:250px;overflow-y:auto;">
+        ${entries.map(e => `<div style="padding:6px 10px;background:white;border-radius:6px;margin-bottom:4px;font-size:13px;border-left:3px solid ${e.type==='vocabulary'?'var(--secondary)':e.type==='grammar'?'var(--accent)':'var(--accent-light)'}">
+          <strong>${escHtml(e.type==='vocabulary'?e.word:e.title)}</strong>
+          <span style="color:var(--text-light);margin-left:8px;font-size:11px;">${e.type==='vocabulary'?'生词':e.type==='grammar'?'语法':'素材'}</span>
+        </div>`).join('')}
+      </div>
+    </div>`,
+    [{ text: '取消', class: 'btn-outline', action: 'closeModal()' },
+     { text: '生成PDF', class: 'btn-primary', action: `executeNotesExport('${entryIds.join(',')}')` }]);
 }
 
-function previewPdfFromDialog() {
-  const fontSize = getSelectedFontSize('dialogFontSize');
-  const entries = window._pdfDialogEntries || [];
-  closeModal();
-  renderPdfPreview(entries, fontSize);
+function selectNotesFontSize(el) {
+  el.closest('.font-size-options').querySelectorAll('.font-size-opt').forEach(o => o.classList.remove('active'));
+  el.classList.add('active');
 }
 
-function previewPdfExport() {
-  const scope = document.querySelector('input[name="pdfScope"]:checked')?.value || 'current';
-  const fontSize = getSelectedFontSize('pdfFontSize');
-  const notebookTypes = Array.from(document.querySelectorAll('#pdfNotebooks input:checked')).map(cb => cb.value);
-
-  let entries;
-  if (scope === 'current') {
-    entries = getFilteredEntries();
-  } else if (scope === 'all') {
-    entries = [...appState.entries];
-  } else if (scope === 'selected') {
-    entries = appState.entries.filter(e => appState.selectedEntries.has(e.id));
-  } else if (scope === 'category') {
-    const catIds = Array.from(document.querySelectorAll('.cat-select-cb:checked')).map(cb => cb.dataset.catId);
-    const entryIdSet = new Set();
-    catIds.forEach(cid => getCategoryEntries(cid).forEach(e => entryIdSet.add(e.id)));
-    entries = appState.entries.filter(e => entryIdSet.has(e.id));
-  } else {
-    entries = [...appState.entries];
-  }
-
-  entries = entries.filter(e => notebookTypes.includes(e.type));
-
-  if (entries.length === 0) { showToast('没有要导出的条目', 'error'); return; }
+async function executeNotesExport(idStr) {
+  const ids = idStr.split(',');
+  const entries = S.entries.filter(e => ids.includes(e.id));
+  const sizeEl = document.querySelector('.font-size-opt.active');
+  const size = sizeEl ? sizeEl.dataset.size : 'medium';
+  const sizes = { small: '12px', medium: '14px', large: '16px', xlarge: '18px' };
+  const titleSizes = { small: '16px', medium: '18px', large: '20px', xlarge: '22px' };
+  const fs = sizes[size]; const ts = titleSizes[size];
 
   closeModal();
-  renderPdfPreview(entries, fontSize);
+
+  // Build render element
+  const container = document.getElementById('pdfRenderContainer');
+  container.style.width = '800px';
+  container.innerHTML = `<div style="background:white;padding:30px;font-family:'Segoe UI',sans-serif;font-size:${fs};line-height:1.7;">
+    <h1 style="text-align:center;font-size:22px;margin-bottom:16px;border-bottom:2px solid var(--primary);padding-bottom:8px;color:var(--primary-dark);">📖 Language Learning Hub - 笔记导出</h1>
+    <p style="text-align:center;font-size:12px;color:#999;margin-bottom:24px;">导出时间: ${new Date().toLocaleString('zh-CN')} | 共 ${entries.length} 个条目</p>
+    ${entries.map(e => {
+      const typeColor = e.type==='vocabulary'?'#00CEC9':e.type==='grammar'?'#FD79A8':'#FDCB6E';
+      const typeName = e.type==='vocabulary'?'生词':e.type==='grammar'?'语法':'素材';
+      let content = '';
+      if (e.type === 'vocabulary') {
+        content = `<p style="margin:6px 0;"><strong>释义：</strong>${escHtml(e.definition)}</p>
+          ${e.examples?.length ? e.examples.filter(Boolean).map(ex => `<p style="padding:4px 10px;background:#f8f9fe;border-left:3px solid ${typeColor};margin:4px 0;font-size:${fs};">📌 ${escHtml(ex)}</p>`).join('') : ''}
+          ${e.note ? `<p style="color:#888;font-style:italic;margin-top:4px;">💡 ${escHtml(e.note)}</p>` : ''}`;
+      } else {
+        content = `<div style="white-space:pre-wrap;margin-top:6px;">${escHtml(e.content || '')}</div>`;
+      }
+      return `<div style="border:1px solid #e0e0e0;border-radius:10px;padding:16px;margin-bottom:14px;page-break-inside:avoid;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <span style="background:${typeColor};color:white;padding:2px 8px;border-radius:10px;font-size:11px;">${typeName}</span>
+          <h3 style="font-size:${ts};margin:0;">${escHtml(e.type==='vocabulary'?e.word:e.title)}</h3>
+        </div>${content}</div>`;
+    }).join('')}
+  </div>`;
+
+  await new Promise(r => setTimeout(r, 100));
+  await generatePDFFromElement(container.firstElementChild, 'learning-notes-export.pdf');
+  container.innerHTML = '';
 }
 
-function renderPdfPreview(entries, fontSize) {
-  const fs = fontSize || 13;
-  const vocabEntries = entries.filter(e => e.type === 'vocabulary');
-  const grammarEntries = entries.filter(e => e.type === 'grammar');
-  const materialEntries = entries.filter(e => e.type === 'material');
-  const date = new Date().toLocaleDateString('zh-CN');
-
-  let html = `<div class="pdf-preview-controls no-print">
-    <button class="btn btn-primary" onclick="window.print()">🖨️ 打印 / 导出PDF</button>
-    <button class="btn btn-outline" onclick="exitPdfPreview()" style="margin-left:8px;">返回</button>
-    <span style="margin-left:16px;font-size:13px;color:var(--text-secondary);">
-      共 ${entries.length} 条 | 字号 ${fs}px</span></div>`;
-
-  html += `<div class="pdf-notes-page" style="font-size:${fs}px;">
-    <h1 style="font-size:${fs+10}px;">📖 Language Learning Hub</h1>
-    <div class="pdf-date" style="font-size:${fs-1}px;">学习笔记导出 · ${date} · 共 ${entries.length} 条</div>`;
-
-  if (vocabEntries.length > 0) {
-    html += `<div class="pdf-section-title" style="font-size:${fs+1}px;">📝 生词本 (${vocabEntries.length})</div>`;
-    vocabEntries.forEach(e => {
-      const cats = getEntryCategoryIds(e.id).map(id => { const c = appState.categories.find(cc => cc.id === id); return c ? c.name : ''; }).filter(Boolean);
-      html += `<div class="pdf-entry">
-        <div class="pdf-entry-word" style="font-size:${fs+3}px;">${escapeHtml(e.word)}</div>
-        <div class="pdf-entry-def" style="font-size:${fs}px;">释义：${escapeHtml(e.definition)}</div>
-        ${e.examples?.filter(Boolean).map(ex => `<div class="pdf-entry-example" style="font-size:${fs-1}px;">📌 ${escapeHtml(ex)}</div>`).join('') || ''}
-        ${e.note ? `<div class="pdf-entry-note" style="font-size:${fs-1}px;">💡 ${escapeHtml(e.note)}</div>` : ''}
-        ${cats.length > 0 ? `<div class="pdf-entry-cats" style="font-size:${fs-2}px;">📁 ${cats.join(' · ')}</div>` : ''}
-      </div>`;
-    });
-  }
-
-  if (grammarEntries.length > 0) {
-    html += `<div class="pdf-section-title" style="font-size:${fs+1}px;">📐 语法本 (${grammarEntries.length})</div>`;
-    grammarEntries.forEach(e => {
-      const cats = getEntryCategoryIds(e.id).map(id => { const c = appState.categories.find(cc => cc.id === id); return c ? c.name : ''; }).filter(Boolean);
-      html += `<div class="pdf-entry">
-        <div class="pdf-entry-title" style="font-size:${fs+2}px;">${escapeHtml(e.title)}</div>
-        <div class="pdf-entry-content" style="font-size:${fs}px;">${escapeHtml(e.content || '')}</div>
-        ${cats.length > 0 ? `<div class="pdf-entry-cats" style="font-size:${fs-2}px;">📁 ${cats.join(' · ')}</div>` : ''}
-      </div>`;
-    });
-  }
-
-  if (materialEntries.length > 0) {
-    html += `<div class="pdf-section-title" style="font-size:${fs+1}px;">✨ 素材本 (${materialEntries.length})</div>`;
-    materialEntries.forEach(e => {
-      const cats = getEntryCategoryIds(e.id).map(id => { const c = appState.categories.find(cc => cc.id === id); return c ? c.name : ''; }).filter(Boolean);
-      html += `<div class="pdf-entry">
-        <div class="pdf-entry-title" style="font-size:${fs+2}px;">${escapeHtml(e.title)}</div>
-        <div class="pdf-entry-content" style="font-size:${fs}px;">${escapeHtml(e.content || '')}</div>
-        ${cats.length > 0 ? `<div class="pdf-entry-cats" style="font-size:${fs-2}px;">📁 ${cats.join(' · ')}</div>` : ''}
-      </div>`;
-    });
-  }
-
-  html += '</div>';
-  document.getElementById('contentBody').innerHTML = html;
-}
-
-function exitPdfPreview() { renderContent(); updateBreadcrumb(); }
-
-// ===================================================================
-// IMPORT / EXPORT (JSON)
-// ===================================================================
+// =====================================================================
+// IMPORT / EXPORT
+// =====================================================================
 function showImportModal() {
-  openModal('导入数据', '', [
-    { text: '取消', class: 'btn-outline', action: 'closeModal()' },
-    { text: '导入', class: 'btn-primary', action: 'performImport()' },
-  ]);
-  document.getElementById('modalContainer').classList.add('wide');
-  document.getElementById('modalBody').innerHTML = `
+  openModal('导入数据', `
     <div class="form-group"><label class="form-label">选择 JSON 文件</label>
       <input type="file" class="form-input" id="importFile" accept=".json" style="padding:8px;"></div>
-    <div class="form-group"><label class="form-label">或者粘贴 JSON 数据</label>
-      <textarea class="form-textarea" id="importText" rows="8" placeholder="粘贴 JSON 数据..."></textarea></div>
-    <details style="margin-top:16px;">
-      <summary style="cursor:pointer;font-size:14px;font-weight:600;color:var(--primary);">📄 查看 JSON 模板示例</summary>
-      <div class="json-template" style="margin-top:8px;">${getJsonTemplate()}</div>
-      <button class="btn btn-sm btn-outline" style="margin-top:8px;" onclick="copyTemplate()">📋 复制模板</button>
-    </details>`;
-}
-
-function getJsonTemplate() {
-  return escapeHtml(JSON.stringify({
-    categories: [{ name: "中华传统文化类", children: [{ name: "武术", children: [] }] }, { name: "科技发展类", children: [{ name: "人工智能", children: [] }] }],
-    vocabulary: [{ word: "Kung Fu", definition: "功夫；中国武术", examples: ["Kung Fu is a traditional Chinese martial art."], note: "也可写作 Gongfu", categories: ["中华传统文化类/武术"] }],
-    grammar: [{ title: "虚拟语气", content: "虚拟语气用于表达与事实相反的假设...", categories: ["语法专题"] }],
-    material: [{ title: "高级替换词: important", content: "crucial, vital, essential, significant...", categories: ["写作素材"] }]
-  }, null, 2));
+    <div class="form-group"><label class="form-label">或粘贴 JSON</label>
+      <textarea class="form-textarea" id="importText" rows="6" placeholder="粘贴JSON数据..."></textarea></div>
+    <details style="margin-top:12px;">
+      <summary style="cursor:pointer;font-size:13px;font-weight:600;color:var(--primary);">📄 查看 JSON 模板</summary>
+      <div class="json-template" style="margin-top:6px;">${escHtml(JSON.stringify({
+        categories:[{name:"分类名",children:[{name:"子分类",children:[]}]}],
+        vocabulary:[{word:"word",definition:"释义",examples:["例句"],note:"备注",categories:["分类名/子分类"]}],
+        grammar:[{title:"标题",content:"内容",categories:["分类名"]}],
+        material:[{title:"标题",content:"内容",categories:["分类名"]}]
+      },null,2))}</div>
+      <button class="btn btn-sm btn-outline" style="margin-top:6px;" onclick="copyTemplate()">📋 复制模板</button>
+    </details>`,
+    [{ text: '取消', class: 'btn-outline', action: 'closeModal()' },
+     { text: '预览导入', class: 'btn-primary', action: 'previewImport()' }]);
+  document.getElementById('modalContainer').classList.add('wide');
 }
 
 function copyTemplate() {
-  const t = JSON.stringify({
-    categories: [{ name: "分类名称", children: [{ name: "子分类", children: [] }] }],
-    vocabulary: [{ word: "单词", definition: "释义", examples: ["例句"], note: "备注", categories: ["分类路径"] }],
-    grammar: [{ title: "标题", content: "内容", categories: ["分类路径"] }],
-    material: [{ title: "标题", content: "内容", categories: ["分类路径"] }]
-  }, null, 2);
-  navigator.clipboard.writeText(t).then(() => showToast('模板已复制', 'success'));
+  const tmpl = JSON.stringify({
+    categories:[{name:"分类名",children:[{name:"子分类",children:[]}]}],
+    vocabulary:[{word:"单词",definition:"释义",examples:["例句"],note:"备注",categories:["分类路径"]}],
+    grammar:[{title:"标题",content:"内容",categories:["分类路径"]}],
+    material:[{title:"标题",content:"内容",categories:["分类路径"]}]
+  },null,2);
+  navigator.clipboard.writeText(tmpl).then(() => showToast('模板已复制', 'success'));
 }
 
-async function performImport() {
+async function previewImport() {
   let jsonData;
-  const fileInput = document.getElementById('importFile');
-  const textInput = document.getElementById('importText');
-  if (fileInput.files.length > 0) {
-    try { jsonData = JSON.parse(await fileInput.files[0].text()); } catch (e) { showToast('文件解析失败: ' + e.message, 'error'); return; }
-  } else if (textInput.value.trim()) {
-    try { jsonData = JSON.parse(textInput.value.trim()); } catch (e) { showToast('JSON 解析失败: ' + e.message, 'error'); return; }
+  const fi = document.getElementById('importFile');
+  const ti = document.getElementById('importText');
+  if (fi.files.length > 0) {
+    try { jsonData = JSON.parse(await fi.files[0].text()); }
+    catch (e) { showToast('文件解析失败: ' + e.message, 'error'); return; }
+  } else if (ti.value.trim()) {
+    try { jsonData = JSON.parse(ti.value.trim()); }
+    catch (e) { showToast('JSON解析失败: ' + e.message, 'error'); return; }
   } else { showToast('请选择文件或粘贴数据', 'error'); return; }
+
+  // Analyze import data
+  const newCats = [];
+  const existingCats = [];
+  function analyzeCats(cats, parentPath) {
+    if (!Array.isArray(cats)) return;
+    cats.forEach(c => {
+      const path = parentPath ? parentPath + '/' + c.name : c.name;
+      const exists = S.categories.find(ec => getCategoryPath(ec.id) === path);
+      if (exists) existingCats.push(path); else newCats.push(path);
+      if (c.children) analyzeCats(c.children, path);
+    });
+  }
+  if (jsonData.categories) analyzeCats(jsonData.categories, '');
+
+  const vocabNew = (jsonData.vocabulary || []).filter(v => !S.entries.find(e => e.type === 'vocabulary' && e.word === v.word));
+  const vocabUpdate = (jsonData.vocabulary || []).filter(v => S.entries.find(e => e.type === 'vocabulary' && e.word === v.word));
+  const gramNew = (jsonData.grammar || []).filter(v => !S.entries.find(e => e.type === 'grammar' && e.title === v.title));
+  const gramUpdate = (jsonData.grammar || []).filter(v => S.entries.find(e => e.type === 'grammar' && e.title === v.title));
+  const matNew = (jsonData.material || []).filter(v => !S.entries.find(e => e.type === 'material' && e.title === v.title));
+  const matUpdate = (jsonData.material || []).filter(v => S.entries.find(e => e.type === 'material' && e.title === v.title));
+
+  // Show preview
+  closeModal();
+  openModal('导入预览', `
+    <div class="import-preview">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+        <span class="import-stat new">🆕 新增 ${vocabNew.length + gramNew.length + matNew.length} 条目</span>
+        <span class="import-stat update">🔄 更新 ${vocabUpdate.length + gramUpdate.length + matUpdate.length} 条目</span>
+        <span class="import-stat new">📁 新增 ${newCats.length} 分类</span>
+      </div>
+      
+      ${newCats.length ? `<div class="import-preview-section"><h4>📁 新增分类</h4>
+        ${newCats.map(p => `<div class="import-preview-item">${escHtml(p)}</div>`).join('')}</div>` : ''}
+      
+      ${vocabNew.length ? `<div class="import-preview-section"><h4>📝 新增生词 (${vocabNew.length})</h4>
+        ${vocabNew.slice(0,10).map(v => `<div class="import-preview-item"><strong>${escHtml(v.word)}</strong> - ${escHtml(v.definition||'')}</div>`).join('')}
+        ${vocabNew.length > 10 ? `<p style="font-size:12px;color:var(--text-light);padding:4px 10px;">...还有 ${vocabNew.length-10} 条</p>` : ''}</div>` : ''}
+      
+      ${vocabUpdate.length ? `<div class="import-preview-section"><h4>🔄 更新生词 (${vocabUpdate.length})</h4>
+        ${vocabUpdate.slice(0,5).map(v => `<div class="import-preview-item existing"><strong>${escHtml(v.word)}</strong> (已存在，将合并)</div>`).join('')}</div>` : ''}
+      
+      ${gramNew.length ? `<div class="import-preview-section"><h4>📐 新增语法 (${gramNew.length})</h4>
+        ${gramNew.slice(0,10).map(v => `<div class="import-preview-item"><strong>${escHtml(v.title)}</strong></div>`).join('')}</div>` : ''}
+      
+      ${matNew.length ? `<div class="import-preview-section"><h4>✨ 新增素材 (${matNew.length})</h4>
+        ${matNew.slice(0,10).map(v => `<div class="import-preview-item"><strong>${escHtml(v.title)}</strong></div>`).join('')}</div>` : ''}
+      
+      ${(vocabNew.length + gramNew.length + matNew.length + vocabUpdate.length + gramUpdate.length + matUpdate.length === 0 && newCats.length === 0) ?
+        '<p style="text-align:center;color:var(--text-light);padding:20px;">没有检测到新数据</p>' : ''}
+    </div>`,
+    [{ text: '取消导入', class: 'btn-outline', action: 'closeModal()' },
+     { text: '✅ 确认导入', class: 'btn-primary', action: 'confirmImport()' }]);
+  document.getElementById('modalContainer').classList.add('wide');
+
+  // Store parsed data temporarily
+  window._pendingImport = jsonData;
+}
+
+async function confirmImport() {
+  const data = window._pendingImport;
+  if (!data) { showToast('导入数据丢失', 'error'); closeModal(); return; }
+
   try {
-    await importData(jsonData);
-    await loadAllData();
-    renderCategoryTree(); renderContent(); updateStats();
-    closeModal();
+    await saveSnapshot();
+    await importData(data);
+    await loadAllData(); renderAll(); closeModal();
     showToast('数据导入成功!', 'success');
-  } catch (e) { showToast('导入失败: ' + e.message, 'error'); }
+    window._pendingImport = null;
+  } catch (e) {
+    showToast('导入失败: ' + e.message, 'error');
+  }
 }
 
 async function importData(data) {
-  const categoryMap = {};
-  async function importCatTree(cats, parentId, prefix) {
+  const catMap = {};
+  async function importCats(cats, parentId, prefix) {
     if (!Array.isArray(cats)) return;
     for (const c of cats) {
       const path = prefix ? prefix + '/' + c.name : c.name;
-      let existing = appState.categories.find(ec => ec.name === c.name && ec.parentId === parentId);
-      let catId;
-      if (existing) { catId = existing.id; } else {
-        catId = generateId();
-        await dbPut('categories', { id: catId, name: c.name, parentId, expanded: false, createdAt: Date.now() });
-      }
-      categoryMap[path] = catId;
-      if (c.children?.length) await importCatTree(c.children, catId, path);
+      let existing = S.categories.find(ec => ec.name === c.name && ec.parentId === parentId);
+      let cid;
+      if (existing) { cid = existing.id; }
+      else { cid = genId(); await dbPut('categories', { id: cid, name: c.name, parentId, expanded: false, createdAt: Date.now() }); }
+      catMap[path] = cid;
+      if (c.children?.length) { await loadAllData(); await importCats(c.children, cid, path); }
     }
   }
-  if (data.categories) { await loadAllData(); await importCatTree(data.categories, null, ''); await loadAllData(); }
 
-  function resolveCatPath(path) {
-    if (categoryMap[path]) return categoryMap[path];
+  if (data.categories) { await loadAllData(); await importCats(data.categories, null, ''); await loadAllData(); }
+
+  function resolvePath(path) {
+    if (catMap[path]) return catMap[path];
     const parts = path.split('/');
-    let parentId = null;
+    let pid = null;
     for (const part of parts) {
-      const found = appState.categories.find(c => c.name === part && c.parentId === parentId);
-      if (found) parentId = found.id; else return null;
+      const found = S.categories.find(c => c.name === part && c.parentId === pid);
+      if (found) pid = found.id; else return null;
     }
-    return parentId;
+    return pid;
   }
 
-  async function importEntries(entries, type) {
-    if (!Array.isArray(entries)) return;
-    for (const item of entries) {
-      let existing = type === 'vocabulary' ? appState.entries.find(e => e.type === type && e.word === item.word) : appState.entries.find(e => e.type === type && e.title === item.title);
-      let entryId;
+  async function importEntries(items, type) {
+    if (!Array.isArray(items)) return;
+    for (const item of items) {
+      let existing;
+      if (type === 'vocabulary') existing = S.entries.find(e => e.type === type && e.word === item.word);
+      else existing = S.entries.find(e => e.type === type && e.title === item.title);
+
+      let eid;
       if (existing) {
         Object.assign(existing, item, { id: existing.id, type, createdAt: existing.createdAt });
         delete existing.categories;
-        await dbPut('entries', existing);
-        entryId = existing.id;
+        await dbPut('entries', existing); eid = existing.id;
       } else {
-        entryId = generateId();
-        const entry = { id: entryId, type, createdAt: Date.now(), ...item };
+        eid = genId();
+        const entry = { id: eid, type, createdAt: Date.now(), ...item };
         delete entry.categories;
         await dbPut('entries', entry);
       }
-      if (item.categories && Array.isArray(item.categories)) {
+
+      if (item.categories?.length) {
         await loadAllData();
         for (const catPath of item.categories) {
-          let catId = resolveCatPath(catPath);
-          if (!catId) {
+          let cid = resolvePath(catPath);
+          if (!cid) {
             const parts = catPath.split('/');
-            let parentId = null;
+            let pid = null;
             for (const part of parts) {
-              let found = appState.categories.find(c => c.name === part && c.parentId === parentId);
-              if (!found) { const nid = generateId(); await dbPut('categories', { id: nid, name: part, parentId, expanded: false, createdAt: Date.now() }); await loadAllData(); catId = nid; parentId = nid; }
-              else { catId = found.id; parentId = found.id; }
+              let found = S.categories.find(c => c.name === part && c.parentId === pid);
+              if (!found) {
+                const nid = genId();
+                await dbPut('categories', { id: nid, name: part, parentId: pid, expanded: false, createdAt: Date.now() });
+                await loadAllData(); cid = nid; pid = nid;
+              } else { cid = found.id; pid = found.id; }
             }
           }
-          if (catId) {
+          if (cid) {
             await loadAllData();
-            if (!appState.entryCategories.find(ec => ec.entryId === entryId && ec.categoryId === catId))
-              await dbPut('entry_categories', { id: generateId(), entryId, categoryId: catId });
+            if (!S.entryCategories.find(ec => ec.entryId === eid && ec.categoryId === cid)) {
+              await dbPut('entry_categories', { id: genId(), entryId: eid, categoryId: cid });
+            }
           }
         }
       }
     }
   }
+
   if (data.vocabulary) { await importEntries(data.vocabulary, 'vocabulary'); await loadAllData(); }
   if (data.grammar) { await importEntries(data.grammar, 'grammar'); await loadAllData(); }
   if (data.material) { await importEntries(data.material, 'material'); await loadAllData(); }
 }
 
 function showExportModal() {
-  openModal('导出数据 (JSON)', '', [
-    { text: '取消', class: 'btn-outline', action: 'closeModal()' },
-    { text: '导出', class: 'btn-primary', action: 'performExport()' },
-  ]);
-  document.getElementById('modalBody').innerHTML = `
-    <div class="form-group"><label class="form-label">选择导出范围</label>
-      <div class="radio-group" style="margin-bottom:16px;">
+  openModal('导出数据', `
+    <div class="form-group"><label class="form-label">导出格式</label>
+      <div class="radio-group" style="margin-bottom:12px;">
+        <label class="radio-item"><input type="radio" name="exportFormat" value="json" checked> JSON (数据)</label>
+        <label class="radio-item"><input type="radio" name="exportFormat" value="pdf"> PDF (笔记)</label>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">导出范围</label>
+      <div class="radio-group" style="margin-bottom:12px;">
         <label class="radio-item"><input type="radio" name="exportScope" value="all" checked> 全部数据</label>
         <label class="radio-item"><input type="radio" name="exportScope" value="notebook"> 按笔记本</label>
-        <label class="radio-item"><input type="radio" name="exportScope" value="category"> 按分类</label></div></div>
-    <div id="exportScopeDetail"></div>`;
+        <label class="radio-item"><input type="radio" name="exportScope" value="category"> 按分类</label>
+      </div>
+    </div>
+    <div id="exportScopeDetail"></div>
+    <div id="exportFontSizeSection" style="display:none;">
+      <div class="quiz-option-group"><h4>📄 PDF 字号</h4>
+        <div class="font-size-options">
+          <div class="font-size-opt" data-size="small" onclick="selectNotesFontSize(this)">小号</div>
+          <div class="font-size-opt active" data-size="medium" onclick="selectNotesFontSize(this)">中号</div>
+          <div class="font-size-opt" data-size="large" onclick="selectNotesFontSize(this)">大号</div>
+          <div class="font-size-opt" data-size="xlarge" onclick="selectNotesFontSize(this)">超大</div>
+        </div>
+      </div>
+    </div>`,
+    [{ text: '取消', class: 'btn-outline', action: 'closeModal()' },
+     { text: '导出', class: 'btn-primary', action: 'performExport()' }]);
+
+  document.querySelectorAll('input[name="exportFormat"]').forEach(r => {
+    r.addEventListener('change', e => {
+      document.getElementById('exportFontSizeSection').style.display = e.target.value === 'pdf' ? 'block' : 'none';
+    });
+  });
+
   document.querySelectorAll('input[name="exportScope"]').forEach(r => {
-    r.addEventListener('change', (e) => {
-      const det = document.getElementById('exportScopeDetail');
+    r.addEventListener('change', e => {
+      const d = document.getElementById('exportScopeDetail');
       if (e.target.value === 'notebook') {
-        det.innerHTML = `<div class="checkbox-group"><label class="checkbox-item"><input type="checkbox" value="vocabulary" checked> 📝 生词本</label>
+        d.innerHTML = `<div class="checkbox-group">
+          <label class="checkbox-item"><input type="checkbox" value="vocabulary" checked> 📝 生词本</label>
           <label class="checkbox-item"><input type="checkbox" value="grammar" checked> 📐 语法本</label>
-          <label class="checkbox-item"><input type="checkbox" value="material" checked> ✨ 素材本</label></div>`;
+          <label class="checkbox-item"><input type="checkbox" value="material" checked> ✨ 素材本</label>
+        </div>`;
       } else if (e.target.value === 'category') {
-        det.innerHTML = `<div class="category-selector" style="max-height:300px;">${renderCategorySelectorTree(getRootCategories(), true)}</div>`;
-      } else { det.innerHTML = ''; }
+        d.innerHTML = `<div class="category-selector" style="max-height:250px;">${renderCatSelectorTree(getRootCategories(), true)}</div>`;
+      } else d.innerHTML = '';
     });
   });
 }
 
-function exportSelected() {
-  if (appState.selectedEntries.size === 0) { showToast('请先选择条目', 'error'); return; }
-  const entries = appState.entries.filter(e => appState.selectedEntries.has(e.id));
-  downloadJson(buildExportData(entries), 'learning-hub-export.json');
-  showToast(`已导出 ${entries.length} 个条目`, 'success');
-}
-
-function performExport() {
+async function performExport() {
+  const format = document.querySelector('input[name="exportFormat"]:checked').value;
   const scope = document.querySelector('input[name="exportScope"]:checked').value;
   let entries;
-  if (scope === 'all') { entries = [...appState.entries]; }
+
+  if (scope === 'all') entries = [...S.entries];
   else if (scope === 'notebook') {
-    const types = Array.from(document.querySelectorAll('#exportScopeDetail input:checked')).map(cb => cb.value);
-    entries = appState.entries.filter(e => types.includes(e.type));
+    const types = [...document.querySelectorAll('#exportScopeDetail input:checked')].map(cb => cb.value);
+    entries = S.entries.filter(e => types.includes(e.type));
   } else {
-    const catIds = Array.from(document.querySelectorAll('.cat-select-cb:checked')).map(cb => cb.dataset.catId);
-    const idSet = new Set();
-    catIds.forEach(cid => getCategoryEntries(cid).forEach(e => idSet.add(e.id)));
-    entries = appState.entries.filter(e => idSet.has(e.id));
+    const catIds = [...document.querySelectorAll('.cat-sel-cb:checked')].map(cb => cb.dataset.catId);
+    const ids = new Set();
+    catIds.forEach(cid => getCategoryEntries(cid).forEach(e => ids.add(e.id)));
+    entries = S.entries.filter(e => ids.has(e.id));
   }
-  if (entries.length === 0) { showToast('没有要导出的数据', 'error'); return; }
-  downloadJson(buildExportData(entries), 'learning-hub-export.json');
-  closeModal();
-  showToast(`已导出 ${entries.length} 个条目`, 'success');
+
+  if (!entries.length) { showToast('没有要导出的数据', 'error'); return; }
+
+  if (format === 'json') {
+    const data = buildExportData(entries);
+    downloadJson(data, 'learning-hub-export.json');
+    closeModal();
+    showToast(`已导出 ${entries.length} 条目 (JSON)`, 'success');
+  } else {
+    closeModal();
+    showNotesExportModal(entries.map(e => e.id));
+  }
+}
+
+async function exportSelected() {
+  if (S.selectedEntries.size === 0) { showToast('请先选择条目', 'error'); return; }
+  const entries = S.entries.filter(e => S.selectedEntries.has(e.id));
+  const data = buildExportData(entries);
+  downloadJson(data, 'learning-hub-export.json');
+  showToast(`已导出 ${entries.length} 条目`, 'success');
 }
 
 function buildExportData(entries) {
-  function buildCatTree(parentId) {
-    return appState.categories.filter(c => c.parentId === parentId).map(c => ({ name: c.name, children: buildCatTree(c.id) }));
+  function buildTree(pid) {
+    return S.categories.filter(c => c.parentId === pid).map(c => ({ name: c.name, children: buildTree(c.id) }));
   }
-  const data = { categories: buildCatTree(null), vocabulary: [], grammar: [], material: [] };
+  const data = { categories: buildTree(null), vocabulary: [], grammar: [], material: [] };
   entries.forEach(e => {
-    const catPaths = getEntryCategoryIds(e.id).map(id => getCategoryPath(id));
+    const catIds = getEntryCatIds(e.id);
+    const catPaths = catIds.map(id => getCategoryPath(id));
     const item = { ...e, categories: catPaths };
     delete item.id; delete item.type; delete item.createdAt;
     if (e.type === 'vocabulary') data.vocabulary.push(item);
@@ -2444,117 +1996,137 @@ function buildExportData(entries) {
 function downloadJson(data, filename) {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = filename;
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
 
-// ===================================================================
+// =====================================================================
 // MODAL SYSTEM
-// ===================================================================
+// =====================================================================
 function openModal(title, bodyHtml, footerButtons) {
   document.getElementById('modalTitle').textContent = title;
   document.getElementById('modalBody').innerHTML = bodyHtml;
   document.getElementById('modalContainer').className = 'modal';
-  document.getElementById('modalFooter').innerHTML = footerButtons.map(btn =>
-    `<button class="btn ${btn.class}" onclick="${btn.action}">${btn.text}</button>`).join('');
+  document.getElementById('modalFooter').innerHTML = footerButtons.map(b =>
+    `<button class="btn ${b.class}" onclick="${b.action}">${b.text}</button>`).join('');
   document.getElementById('modalOverlay').classList.add('active');
 }
 
 function closeModal() { document.getElementById('modalOverlay').classList.remove('active'); }
-document.getElementById('modalOverlay').addEventListener('click', (e) => { if (e.target === e.currentTarget) closeModal(); });
+document.getElementById('modalOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
 
-// ===================================================================
+// =====================================================================
 // CONFIRM DIALOG
-// ===================================================================
-function showConfirm(title, message, callback) {
+// =====================================================================
+function showConfirm(title, msg, cb) {
   document.getElementById('confirmTitle').textContent = title;
-  document.getElementById('confirmMessage').textContent = message;
-  appState.confirmCallback = callback;
+  document.getElementById('confirmMessage').textContent = msg;
+  S.confirmCallback = cb;
   document.getElementById('confirmOverlay').classList.add('active');
 }
 
-function closeConfirm() { document.getElementById('confirmOverlay').classList.remove('active'); appState.confirmCallback = null; }
-async function confirmAction() { if (appState.confirmCallback) await appState.confirmCallback(); closeConfirm(); }
+function closeConfirm() { document.getElementById('confirmOverlay').classList.remove('active'); S.confirmCallback = null; }
 
-// ===================================================================
-// TOAST
-// ===================================================================
-function showToast(message, type = 'info') {
-  const container = document.getElementById('toastContainer');
-  const icons = { success: '✅', error: '❌', info: 'ℹ️' };
-  const toast = document.createElement('div');
-  toast.className = `toast ${type}`;
-  toast.innerHTML = `<span>${icons[type] || 'ℹ️'}</span><span>${escapeHtml(message)}</span>`;
-  container.appendChild(toast);
-  setTimeout(() => { toast.style.transition = 'opacity 0.3s'; toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+async function confirmAction() {
+  if (S.confirmCallback) await S.confirmCallback();
+  closeConfirm();
 }
 
-// ===================================================================
-// UTILITIES
-// ===================================================================
-function escapeHtml(text) { if (!text) return ''; const d = document.createElement('div'); d.textContent = text; return d.innerHTML; }
-function escapeAttr(text) { if (!text) return ''; return text.replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function escapeRegex(str) { return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+// =====================================================================
+// TOAST
+// =====================================================================
+function showToast(msg, type = 'info') {
+  const c = document.getElementById('toastContainer');
+  const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<span>${icons[type]||'ℹ️'}</span><span>${escHtml(msg)}</span>`;
+  c.appendChild(t);
+  setTimeout(() => { t.style.transition = 'opacity 0.3s'; t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3000);
+}
 
-// ===================================================================
+// =====================================================================
+// UTILITIES
+// =====================================================================
+function escHtml(t) { if (!t) return ''; const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+function escAttr(t) { return (t||'').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+function escRegex(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+// =====================================================================
 // KEYBOARD SHORTCUTS
-// ===================================================================
-document.addEventListener('keydown', (e) => {
+// =====================================================================
+document.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key === 'f') { e.preventDefault(); document.getElementById('globalSearch').focus(); }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undoLastAction(); }
   if (e.key === 'Escape') { closeModal(); closeConfirm(); document.getElementById('contextMenu').classList.remove('show'); }
 });
 
-// ===================================================================
-// INIT
-// ===================================================================
-async function initApp() {
-  try {
-    await openDB();
-    await loadAllData();
-    renderCategoryTree(); renderContent(); updateBreadcrumb(); updateStats();
-    restoreSidebarState();
-    restoreZoom();
-    if (appState.entries.length === 0 && appState.categories.length === 0) {
-      await addSampleData();
-      await loadAllData();
-      renderCategoryTree(); renderContent(); updateStats();
-    }
-  } catch (e) { console.error('Init error:', e); showToast('初始化失败: ' + e.message, 'error'); }
-}
+// =====================================================================
+// WINDOW RESIZE
+// =====================================================================
+window.addEventListener('resize', () => {
+  if (window.innerWidth > 768) {
+    document.getElementById('sidebar').classList.remove('mobile-open');
+    document.getElementById('mobileOverlay').classList.remove('active');
+  }
+});
 
+// =====================================================================
+// SAMPLE DATA
+// =====================================================================
 async function addSampleData() {
-  const c1 = generateId(), c2 = generateId(), c3 = generateId(), c4 = generateId(), c5 = generateId();
+  const c1 = genId(), c2 = genId(), c3 = genId(), c4 = genId(), c5 = genId();
   await dbPut('categories', { id: c1, name: '中华传统文化类', parentId: null, expanded: true, createdAt: Date.now() });
   await dbPut('categories', { id: c2, name: '武术', parentId: c1, expanded: false, createdAt: Date.now() });
   await dbPut('categories', { id: c3, name: '科技发展类', parentId: null, expanded: true, createdAt: Date.now() });
   await dbPut('categories', { id: c4, name: '人工智能', parentId: c3, expanded: false, createdAt: Date.now() });
   await dbPut('categories', { id: c5, name: '体育运动类', parentId: null, expanded: false, createdAt: Date.now() });
 
-  const e1 = generateId();
+  const e1 = genId();
   await dbPut('entries', { id: e1, type: 'vocabulary', word: 'Kung Fu', definition: '功夫；中国武术', examples: ['Kung Fu is a traditional Chinese martial art.', 'He has practiced Kung Fu for ten years.'], note: '也可写作 Gongfu', createdAt: Date.now() });
-  await dbPut('entry_categories', { id: generateId(), entryId: e1, categoryId: c2 });
-  await dbPut('entry_categories', { id: generateId(), entryId: e1, categoryId: c5 });
+  await dbPut('entry_categories', { id: genId(), entryId: e1, categoryId: c2 });
+  await dbPut('entry_categories', { id: genId(), entryId: e1, categoryId: c5 });
 
-  const e2 = generateId();
+  const e2 = genId();
   await dbPut('entries', { id: e2, type: 'vocabulary', word: 'Algorithm', definition: '算法', examples: ['Machine learning algorithms can identify patterns in data.'], note: '', createdAt: Date.now() });
-  await dbPut('entry_categories', { id: generateId(), entryId: e2, categoryId: c4 });
+  await dbPut('entry_categories', { id: genId(), entryId: e2, categoryId: c4 });
 
-  const e3 = generateId();
+  const e3 = genId();
   await dbPut('entries', { id: e3, type: 'vocabulary', word: 'Artificial Intelligence', definition: '人工智能', examples: ['AI is transforming every industry.'], note: '缩写: AI', createdAt: Date.now() });
-  await dbPut('entry_categories', { id: generateId(), entryId: e3, categoryId: c4 });
+  await dbPut('entry_categories', { id: genId(), entryId: e3, categoryId: c4 });
 
-  const e4 = generateId();
+  const e4 = genId();
   await dbPut('entries', { id: e4, type: 'vocabulary', word: 'Calligraphy', definition: '书法', examples: ['Chinese calligraphy is considered a form of art.'], note: '', createdAt: Date.now() });
-  await dbPut('entry_categories', { id: generateId(), entryId: e4, categoryId: c1 });
+  await dbPut('entry_categories', { id: genId(), entryId: e4, categoryId: c1 });
 
-  const e5 = generateId();
+  const e5 = genId();
   await dbPut('entries', { id: e5, type: 'grammar', title: '虚拟语气 (Subjunctive Mood)', content: '虚拟语气用于表达假设、愿望、建议等与现实相反或不确定的情况。\n\n1. 与现在事实相反: If I were you, I would study harder.\n2. 与过去事实相反: If I had studied harder, I would have passed the exam.\n3. 与将来事实相反: If I should win the lottery, I would travel the world.\n\n注意: 在虚拟语气中，be动词一律使用were。', createdAt: Date.now() });
-  await dbPut('entry_categories', { id: generateId(), entryId: e5, categoryId: c3 });
+  await dbPut('entry_categories', { id: genId(), entryId: e5, categoryId: c3 });
 
-  const e6 = generateId();
+  const e6 = genId();
   await dbPut('entries', { id: e6, type: 'material', title: 'Important 的高级替换词', content: 'crucial - 至关重要的\nvital - 极其重要的\nessential - 必不可少的\nsignificant - 有重大意义的\nparamount - 最重要的\nindispensable - 不可或缺的\npivotal - 关键性的', createdAt: Date.now() });
-  await dbPut('entry_categories', { id: generateId(), entryId: e6, categoryId: c3 });
+  await dbPut('entry_categories', { id: genId(), entryId: e6, categoryId: c3 });
+}
+
+// =====================================================================
+// INIT
+// =====================================================================
+async function initApp() {
+  try {
+    await openDB();
+    await loadAllData();
+    if (S.entries.length === 0 && S.categories.length === 0) {
+      await addSampleData();
+      await loadAllData();
+    }
+    renderAll();
+    updateUndoBtn();
+  } catch (e) {
+    console.error('Init error:', e);
+    showToast('初始化失败: ' + e.message, 'error');
+  }
 }
 
 initApp();
